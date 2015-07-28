@@ -1,15 +1,16 @@
 {
   "name": "miladrahimi/phpcontainer",
-  "description": "Free PHP IoC and DI container for neat and powerful projects!",
+  "description": "Free PHP Dependency Injection Container for neat and powerful projects!",
   "keywords": [
     "IoC",
+    "DI",
     "Inversion",
     "Control",
     "Container",
     "Dependency",
     "Injection"
   ],
-  "homepage": "http://miladrahimi.github.io/phpcontainer",
+  "homepage": "http://github.io/miladrahimi/phpcontainer",
   "type": "library",
   "license": "MIT",
   "authors": [
