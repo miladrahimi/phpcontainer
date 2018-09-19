@@ -1,165 +1,201 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Milad Rahimi <info@miladrahimi.com>
- * Date: 6/22/2017
- * Time: 1:44 PM
- */
 
 namespace MiladRahimi\PhpContainer;
 
-use Closure;
-use InvalidArgumentException;
-use MiladRahimi\PhpContainer\Enums\ServiceTypes;
-use MiladRahimi\PhpContainer\Exceptions\BadServiceImplementationException;
-use MiladRahimi\PhpContainer\Exceptions\RebindException;
-use MiladRahimi\PhpContainer\Exceptions\ServiceNotFoundException;
+use MiladRahimi\PhpContainer\Collections\Prototype;
+use MiladRahimi\PhpContainer\Collections\Singleton;
+use MiladRahimi\PhpContainer\Exceptions\BindingNotFoundException;
+use MiladRahimi\PhpContainer\Exceptions\ResolutionException;
+use ReflectionClass;
+use ReflectionException;
 use ReflectionFunction;
 
 class Container
 {
     /**
-     * Bound Services
+     * Service repository
      *
-     * @var array
+     * @var Prototype[]|Singleton[]
      */
-    private $services = [];
+    public static $repository = [];
 
     /**
-     * Singleton instances
-     *
-     * @var array
+     * Reset the repository
      */
-    private $singletonInstances = [];
-
-    /**
-     * Bind new singleton service
-     *
-     * @param string $serviceName
-     * @param string|Closure|object $serviceImplementation
-     * @throws RebindException
-     */
-    public function singleton($serviceName, $serviceImplementation)
+    public static function reset()
     {
-        $this->bind($serviceName, ServiceTypes::Singleton, $serviceImplementation);
+        static::$repository = [];
     }
 
     /**
-     * Bind new prototype service
+     * Bind in prototype mode
      *
-     * @param string $serviceName
-     * @param string|Closure|object $serviceImplementation
-     * @throws RebindException
+     * @param string $abstract
+     * @param $concrete
      */
-    public function prototype($serviceName, $serviceImplementation)
+    public static function prototype(string $abstract, $concrete)
     {
-        $this->bind($serviceName, ServiceTypes::Prototype, $serviceImplementation);
+        static::$repository[$abstract] = new Prototype($concrete);
     }
 
     /**
-     * Bind new service
+     * Bind in singleton mode
      *
-     * @param string $serviceName
-     * @param int $serviceType
-     * @param string|Closure|object $serviceImplementation
-     * @throws RebindException
+     * @param string $abstract
+     * @param $concrete
      */
-    private function bind($serviceName, $serviceType, $serviceImplementation)
+    public static function singleton(string $abstract, $concrete)
     {
-        if (is_string($serviceName) == false) {
-            throw new InvalidArgumentException("Service name must be string");
+        static::$repository[$abstract] = new Singleton($concrete);
+    }
+
+    /**
+     * Check if given abstract is bound or not
+     *
+     * @param string $abstract
+     * @return bool
+     */
+    public static function isBound(string $abstract): bool
+    {
+        return isset(static::$repository[$abstract]);
+    }
+
+    /**
+     * Check if given abstract or concrete is resolvable or not
+     *
+     * @param string $abstract
+     * @return bool
+     * @throws ResolutionException
+     */
+    public static function isResolvable(string $abstract): bool
+    {
+        return static::isBound($abstract) || (class_exists($abstract) && static::isAbstract($abstract) == false);
+    }
+
+    /**
+     * Check if class is abstract or not
+     *
+     * @param string $class
+     * @return bool
+     * @throws ResolutionException
+     */
+    protected static function isAbstract(string $class): bool
+    {
+        try {
+            $reflection = new ReflectionClass($class);
+        } catch (ReflectionException $e) {
+            throw new ResolutionException('Cannot create reflection for ' . $class);
         }
 
-        if (array_key_exists($serviceName, $this->services)) {
-            throw new RebindException($serviceName . "is bound already");
-        }
-
-        $this->services[$serviceName] = [
-            'type' => $serviceType,
-            'body' => $serviceImplementation,
-        ];
+        return $reflection->isAbstract();
     }
 
     /**
-     * Run service body closure
+     * Make right concrete of the abstract
      *
-     * @param Closure $closure
+     * @param string $abstract
      * @return mixed
+     * @throws BindingNotFoundException
+     * @throws ResolutionException
      */
-    private function run(Closure $closure)
+    public static function make(string $abstract)
     {
-        $reflectionFunction = new ReflectionFunction($closure);
+        if (isset(static::$repository[$abstract]) == false) {
+            if (class_exists($abstract) && static::isAbstract($abstract) == false) {
+                return static::instantiate($abstract);
+            }
 
-        return $reflectionFunction->invoke();
+            throw new BindingNotFoundException($abstract . ' is not bound.');
+        }
 
+        $binding = static::$repository[$abstract];
+
+        if ($binding instanceof Singleton && $binding->instance) {
+            return $binding->instance;
+        }
+
+        $concrete = $binding->concrete;
+
+        if (is_string($binding->concrete) && class_exists($binding->concrete)) {
+            $concrete = static::instantiate($binding->concrete);
+        } elseif (is_callable($binding->concrete)) {
+            $concrete = static::call($binding->concrete);
+        } elseif (is_object($concrete) && $binding instanceof Prototype) {
+            return clone $binding->concrete;
+        }
+
+        if ($binding instanceof Singleton) {
+            static::$repository[$abstract]->instance = $concrete;
+        }
+
+        return $concrete;
     }
 
     /**
-     * Make the service (singleton or prototype)
+     * Instantiate the concrete class
      *
-     * @param string $serviceName
-     * @return mixed
-     * @throws ServiceNotFoundException
-     * @throws BadServiceImplementationException
+     * @param string $class
+     * @return object
+     * @throws ResolutionException
+     * @throws BindingNotFoundException
      */
-    public function make($serviceName)
+    protected static function instantiate(string $class)
     {
-        if (array_key_exists($serviceName, $this->services) == false) {
-            throw new ServiceNotFoundException();
-        }
+        try {
+            $reflection = new ReflectionClass($class);
 
-        switch ($this->services[$serviceName]["type"]) {
-            case ServiceTypes::Singleton:
-                return $this->makeSingleton($serviceName, $this->services[$serviceName]["body"]);
-            case ServiceTypes::Prototype:
-                return $this->makePrototype($this->services[$serviceName]["body"]);
-        }
+            $parameters = [];
 
-        return null;
+            if ($reflection->hasMethod('__construct')) {
+                $method = $reflection->getMethod('__construct');
+
+                foreach ($method->getParameters() as $parameter) {
+                    if ($parameter->getClass()) {
+                        $parameters[] = static::make($parameter->getClass()->getName());
+                    } else {
+                        $defaultValue = $parameter->getDefaultValue();
+                        $parameters[] = $defaultValue;
+                    }
+                }
+            }
+
+            if (count($parameters) == 0) {
+                return new $class;
+            } else {
+                return $reflection->newInstanceArgs($parameters);
+            }
+        } catch (ReflectionException $e) {
+            throw new ResolutionException('Reflection error.', 0, $e);
+        }
     }
 
     /**
-     * Make singleton instance of service
+     * Call the concrete callable
      *
-     * @param string $serviceName
-     * @param string|Closure|object $serviceImplementation
-     * @return mixed
-     * @throws BadServiceImplementationException
+     * @param callable $callable
+     * @return object
+     * @throws ResolutionException
+     * @throws BindingNotFoundException
      */
-    private function makeSingleton($serviceName, $serviceImplementation)
+    protected static function call(callable $callable)
     {
-        if (key_exists($serviceName, $this->singletonInstances)) {
-            return $this->singletonInstances[$serviceName];
+        try {
+            $reflection = new ReflectionFunction($callable);
+
+            $parameters = [];
+
+            foreach ($reflection->getParameters() as $parameter) {
+                if ($parameter->getClass()) {
+                    $parameters[] = static::make($parameter->getClass()->getName());
+                } else {
+                    $defaultValue = $parameter->getDefaultValue();
+                    $parameters[] = $defaultValue;
+                }
+            }
+
+            return call_user_func_array($callable, $parameters);
+        } catch (ReflectionException $e) {
+            throw new ResolutionException('Reflection error.', 0, $e);
         }
-
-        if ($serviceImplementation instanceof Closure) {
-            return $this->singletonInstances[$serviceName] = $this->run($serviceImplementation);
-        }
-
-        if (is_object($serviceImplementation) || class_exists($serviceImplementation)) {
-            return $this->singletonInstances[$serviceName] = new $serviceImplementation;
-        }
-
-        throw new BadServiceImplementationException('Bound service must be either closure, class or object');
-    }
-
-    /**
-     * Make prototype instance of service
-     *
-     * @param string|Closure|object $serviceImplementation
-     * @return mixed
-     * @throws BadServiceImplementationException
-     */
-    private function makePrototype($serviceImplementation)
-    {
-        if ($serviceImplementation instanceof Closure) {
-            return $this->run($serviceImplementation);
-        }
-
-        if (is_object($serviceImplementation) || class_exists($serviceImplementation)) {
-            return new $serviceImplementation;
-        }
-
-        throw new BadServiceImplementationException('Bound service must be either closure, class or object');
     }
 }

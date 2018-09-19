@@ -1,9 +1,10 @@
 {
   "name": "miladrahimi/phpcontainer",
-  "description": "Free PHP dependency injection container for neat and powerful projects!",
+  "description": "Dependency injection (IoC) container for PHP projects",
   "keywords": [
     "IoC",
     "DI",
+    "DIC",
     "Inversion",
     "Control",
     "Container",
@@ -17,7 +18,7 @@
     {
       "name": "Milad Rahimi",
       "email": "info@miladrahimi.com",
-      "homepage": "http://miladrahimi.com",
+      "homepage": "https://miladrahimi.com",
       "role": "Developer"
     }
   ],
@@ -26,14 +27,15 @@
     "source": "https://github.com/miladrahimi/phpcontainer/issues"
   },
   "require": {
-    "php": ">=5.4.0"
+    "php": "^7.0"
   },
   "autoload": {
     "psr-4": {
-      "MiladRahimi\\": "src/MiladRahimi/"
+      "MiladRahimi\\PhpContainer\\": "src/MiladRahimi/PhpContainer/",
+      "MiladRahimi\\PhpContainer\\Tests\\": "tests/"
     }
   },
   "require-dev": {
-    "phpunit/phpunit": "^4.8"
+    "phpunit/phpunit": "^6.0"
   }
 }
