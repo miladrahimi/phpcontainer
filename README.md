@@ -147,7 +147,7 @@ Container::prototype('user', $user);
 
 The container might raise the following exceptions:
 
-`BindingNotFoundException`raises when you try to make an abstraction while you haven't bound it to any concrete yet.
+`BindingNotFoundException` raises when you try to make an abstraction while you haven't bound it to any concrete yet.
 
 `ResolutionException` raises when PHP raises `ReflectionException` or the container cannot inject parameter values to the concrete constructor or closure.
 
