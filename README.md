@@ -1,3 +1,9 @@
+[![Latest Stable Version](https://poser.pugx.org/miladrahimi/phpcontainer/v)](//packagist.org/packages/miladrahimi/phpcontainer)
+[![Total Downloads](https://poser.pugx.org/miladrahimi/phpcontainer/downloads)](//packagist.org/packages/miladrahimi/phpcontainer)
+[![Build Status](https://travis-ci.org/miladrahimi/phpcontainer.svg?branch=master)](https://travis-ci.org/miladrahimi/phpcontainer)
+[![Coverage Status](https://coveralls.io/repos/github/miladrahimi/phpcontainer/badge.svg?branch=master)](https://coveralls.io/github/miladrahimi/phpcontainer?branch=master)
+[![License](https://poser.pugx.org/miladrahimi/phpcontainer/license)](//packagist.org/packages/miladrahimi/phpcontainer)
+
 # PhpContainer
 Dependency injection container (IoC) for PHP projects.
 
@@ -13,7 +19,7 @@ PhpContainer provides a dependency injection container (aka IoC Container) for y
 You can add PhpContainer to your project via Composer with following command:
 
 ```bash
-composer require miladrahimi/phpcontainer:3.*
+composer require miladrahimi/phpcontainer:4.*
 ```
 
 ## Documentation
@@ -26,11 +32,13 @@ You can bind via singleton and prototype methods.
 ```php
 use MiladRahimi\PhpContainer\Container;
 
-Container::singleton(DatabaseInterface::class, MySQL::class);
-Container::prototype(MailerInterface::class, MailTrap::class);
+$container = new Container();
 
-$database = Container::get(DatabaseInterface::class);
-$mailer = Container::get(MailerInterface::class);
+$container->singleton(DatabaseInterface::class, MySQL::class);
+$container->prototype(MailerInterface::class, MailTrap::class);
+
+$database = $container->get(DatabaseInterface::class);
+$mailer = $container->get(MailerInterface::class);
 ```
 
 The container instantiates implementation classes only once and returns them whenever you call the make method if you bind them via singleton method, otherwise, it instantiates implementation classes on any instantiation request.
@@ -40,19 +48,21 @@ Following example demonstrates the differences between singleton and prototype b
 ```php
 use MiladRahimi\PhpContainer\Container;
 
-Container::prototype(InterfaceA::class, ClassA::class);
-Container::singleton(InterfaceB::class, ClassB::class);
+$container = new Container();
 
-$a1 = Container::get(InterfaceA::class);
+$container->prototype(InterfaceA::class, ClassA::class);
+$container->singleton(InterfaceB::class, ClassB::class);
+
+$a1 = $container->get(InterfaceA::class);
 $a1->name = 'Something';
 
-$a2 = Container::get(InterfaceA::class);
+$a2 = $container->get(InterfaceA::class);
 echo $a2->name; // NULL
 
-$b1 = Container::get(InterfaceB::class);
+$b1 = $container->get(InterfaceB::class);
 $b1->name = 'Something';
 
-$b2 = Container::get(InterfaceB::class);
+$b2 = $container->get(InterfaceB::class);
 echo $b2->name; // 'Something'
 
 ```
@@ -64,9 +74,11 @@ You can retrieve implementation classes from the container instead of using the 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
+$container = new Container();
+
 // No binding here!
 
-$database = Container::get(MySQL::class);
+$database = $container->get(MySQL::class);
 ```
 
 ### Constructor Auto-injection
@@ -82,10 +94,12 @@ class Notifier implements NotifierInterface {
     }
 }
 
-Container::prototype(MailInterface::class, MailTrap::class);
-Container::prototype(NotifierInterface::class, Notifier::class);
+$container = new Container();
 
-$notifier = Container::get(NotifierInterface::class);
+$container->prototype(MailInterface::class, MailTrap::class);
+$container->prototype(NotifierInterface::class, Notifier::class);
+
+$notifier = $container->get(NotifierInterface::class);
 ```
 
 Well, let's check what will the container do! The container is supposed to create an instance of Notifier, its constructor has some arguments, it's ok! The first argument is MailInterface, it is bound to MailTrap so the container will inject an instance of MailTrap, the second argument is SMS class, it's not bound to any implementation but it's insatiable so the container pass an instance of itself, the last argument is a primitive variable and has a default value so the container passes the same default value.
@@ -99,20 +113,22 @@ Following example illustrates how to use closure as implementation.
 ```php
 use MiladRahimi\PhpContainer\Container;
 
-Container::prototype('time-prototype', function () {
+$container = new Container();
+
+$container->prototype('time-prototype', function () {
     return microtime(true);
 });
 
-Container::singleton('time-singleton', function () {
+$container->singleton('time-singleton', function () {
     return microtime(true);
 });
 
-$tp1 = Container::get('time-prototype');
-$tp2 = Container::get('time-prototype');
+$tp1 = $container->get('time-prototype');
+$tp2 = $container->get('time-prototype');
 echo $tp1 == $tp2; // FALSE
 
-$ts1 = Container::get('time-singleton');
-$ts2 = Container::get('time-singleton');
+$ts1 = $container->get('time-singleton');
+$ts2 = $container->get('time-singleton');
 echo $ts1 == $ts2; // TRUE
 ```
 
@@ -121,8 +137,10 @@ Just like class constructors, closures are also able to have arguments, the cont
 ```php
 use MiladRahimi\PhpContainer\Container;
 
-Container::prototype(MailerInterface::class, MailTrap::class);
-Container::prototype('notifier', function (MailerInterface $mailer) {
+$container = new Container();
+
+$container->prototype(MailerInterface::class, MailTrap::class);
+$container->prototype('notifier', function (MailerInterface $mailer) {
     $notifier = new Notifier();
     $notifier->setMailer($mailer);
     
@@ -140,17 +158,19 @@ use MiladRahimi\PhpContainer\Container;
 $user = new User();
 $user->name = 'Milad';
 
-Container::prototype('user', $user);
+$container = new Container();
+
+$container->prototype('user', $user);
 ```
 
 ### Exceptions
 
 The container might raise the following exceptions:
 
-`BindingNotFoundException` raises when you try to make an abstraction while you haven't bound it to any concrete yet.
+`NotFoundException` raises when you try to make an abstraction while you haven't bound it to any concrete yet.
 
-`ResolutionException` raises when PHP raises `ReflectionException` or the container cannot inject parameter values to the concrete constructor or closure.
+`ContainerException` raises when PHP raises `ReflectionException` or the container cannot inject parameter values to the concrete constructor or closure.
 
 ## License
 
-PhpContainer is created by [Milad Rahimi](http://miladrahimi.com) and released under the [MIT License](http://opensource.org/licenses/mit-license.php).
+PhpContainer is created by [Milad Rahimi](https://miladrahimi.com) and released under the [MIT License](http://opensource.org/licenses/mit-license.php).
