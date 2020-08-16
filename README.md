@@ -5,7 +5,8 @@
 [![License](https://poser.pugx.org/miladrahimi/phpcontainer/license)](//packagist.org/packages/miladrahimi/phpcontainer)
 
 # PhpContainer
-Dependency injection container (IoC) for PHP projects.
+
+PSR-11 compliant dependency injection container (IoC) for PHP projects.
 
 ## Overview
 [Dependency Inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle) is one of the most important Object-oriented design principles.
