@@ -67,18 +67,6 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Check if the given abstract or concrete is resolvable or not
-     *
-     * @param $id
-     * @return bool
-     * @throws ContainerException
-     */
-    protected function isResolvable($id): bool
-    {
-        return $this->has($id) || (class_exists($id) && $this->isAbstract($id) == false);
-    }
-
-    /**
      * Check if class is abstract or not
      *
      * @param string $class

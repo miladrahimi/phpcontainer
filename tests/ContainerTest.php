@@ -27,7 +27,7 @@ class ContainerTest extends TestCase
     public function setUp()
     {
         parent::setUp();
-        
+
         $this->container = new Container();
     }
 
@@ -39,6 +39,15 @@ class ContainerTest extends TestCase
         $this->assertTrue($this->container->has(A::class));
         $this->assertTrue($this->container->has(B::class));
         $this->assertFalse($this->container->has(C::class));
+    }
+
+    public function test_empty_method()
+    {
+        $this->container->prototype(Blank::class, A::class);
+        $this->assertTrue($this->container->has(Blank::class));
+
+        $this->container->empty();
+        $this->assertFalse($this->container->has(Blank::class));
     }
 
     /**
@@ -179,6 +188,16 @@ class ContainerTest extends TestCase
         $t2 = $this->container->get('time');
 
         $this->assertNotEquals($t1, $t2);
+    }
+
+    public function test_invalid_callable_it_should_throw_exception()
+    {
+        $this->container->prototype('time', function (int $requiredArg) {
+            return microtime(true);
+        });
+
+        $this->expectException(ContainerException::class);
+        $this->container->get('time');
     }
 
     /**
