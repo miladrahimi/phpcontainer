@@ -16,7 +16,7 @@ PhpContainer provides a dependency injection container (aka IoC Container) for y
 
 ## Installation
 
-You can add PhpContainer to your project via Composer with following command:
+You can add PhpContainer to your project via Composer with the following command:
 
 ```bash
 composer require miladrahimi/phpcontainer:4.*
@@ -41,9 +41,9 @@ $database = $container->get(DatabaseInterface::class);
 $mailer = $container->get(MailerInterface::class);
 ```
 
-The container instantiates implementation classes only once and returns them whenever you call the make method if you bind them via singleton method, otherwise, it instantiates implementation classes on any instantiation request.
+The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method, on the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `prototype` method.
 
-Following example demonstrates the differences between singleton and prototype binding.
+The following example demonstrates the differences between singleton and prototype binding.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -69,7 +69,8 @@ echo $b2->name; // 'Something'
 
 ### Implicit Binding
 
-You can retrieve implementation classes from the container instead of using the new keyword to instantiate them. It could be helpful for mocking orphan implementation classes.
+You can retrieve implementation classes from the container instead of using the new keyword to instantiate them.
+It could help mock orphan implementation classes.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -83,7 +84,7 @@ $database = $container->get(MySQL::class);
 
 ### Constructor Auto-injection
 
-Implementation classes can have constructor parameters which have default values or resolvable by the container.
+Implementation classes can have constructor parameters that have default values or resolvable by the container.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -102,7 +103,12 @@ $container->prototype(NotifierInterface::class, Notifier::class);
 $notifier = $container->get(NotifierInterface::class);
 ```
 
-Well, let's check what will the container do! The container is supposed to create an instance of Notifier, its constructor has some arguments, it's ok! The first argument is MailInterface, it is bound to MailTrap so the container will inject an instance of MailTrap, the second argument is SMS class, it's not bound to any implementation but it's insatiable so the container pass an instance of itself, the last argument is a primitive variable and has a default value so the container passes the same default value.
+Well, let's check what will the container do!
+The container is supposed to create an instance of Notifier.
+The Notifier constructor has some arguments, it's ok!
+The first argument is MailInterface and it is already bound to MailTrap so the container will inject an instance of MailTrap.
+The second argument is SMS class, it's not bound to any implementation but it's insatiable so the container instantiates and passes an instance of it.
+The last argument is a primitive variable and has a default value so the container passes the same default value.
 
 Constructor auto-injection is also available for implicit bindings.
 
@@ -132,7 +138,8 @@ $ts2 = $container->get('time-singleton');
 echo $ts1 == $ts2; // TRUE
 ```
 
-Just like class constructors, closures are also able to have arguments, the container will try to inject/pass appropriate implementations/values.
+Just like class constructors, closures are also able to have arguments.
+The container will try to inject/pass appropriate implementations/values to closures.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -150,7 +157,8 @@ $container->prototype('notifier', function (MailerInterface $mailer) {
 
 ### Object binding
 
-You can also bind an abstraction to an object. In this case, singleton binding is used to release the original object on resolve and prototype binding is used to release a clone of the object each time.
+You can also bind an abstraction to an object.
+In this case, singleton binding is used to release the original object on resolve, and prototype binding is also used to release a clone of the object each time.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -169,7 +177,7 @@ The container might raise the following exceptions:
 
 `NotFoundException` raises when you try to make an abstraction while you haven't bound it to any concrete yet.
 
-`ContainerException` raises when PHP raises `ReflectionException` or the container cannot inject parameter values to the concrete constructor or closure.
+`ContainerException` raises when `ReflectionException` raises, or the container cannot inject parameter values to the concrete constructor or closures.
 
 ## License
 
