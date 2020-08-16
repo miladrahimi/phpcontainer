@@ -2,6 +2,11 @@
 
 namespace MiladRahimi\PhpContainer\Collections;
 
+/**
+ * Class Singleton
+ *
+ * @package MiladRahimi\PhpContainer\Collections
+ */
 class Singleton
 {
     /**

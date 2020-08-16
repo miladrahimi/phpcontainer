@@ -4,72 +4,78 @@ namespace MiladRahimi\PhpContainer;
 
 use MiladRahimi\PhpContainer\Collections\Prototype;
 use MiladRahimi\PhpContainer\Collections\Singleton;
-use MiladRahimi\PhpContainer\Exceptions\BindingNotFoundException;
-use MiladRahimi\PhpContainer\Exceptions\ResolutionException;
+use MiladRahimi\PhpContainer\Exceptions\NotFoundException;
+use MiladRahimi\PhpContainer\Exceptions\ContainerException;
+use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 
-class Container
+/**
+ * Class Container
+ *
+ * @package MiladRahimi\PhpContainer
+ */
+class Container implements ContainerInterface
 {
     /**
-     * Service repository
+     * Binding repository
      *
      * @var Prototype[]|Singleton[]
      */
-    public static $repository = [];
+    private $repository = [];
 
     /**
-     * Reset the repository
+     * Empty the container
      */
-    public static function reset()
+    public function empty()
     {
-        static::$repository = [];
+        $this->repository = [];
     }
 
     /**
      * Bind in prototype mode
      *
-     * @param string $abstract
+     * @param $id
      * @param $concrete
      */
-    public static function prototype(string $abstract, $concrete)
+    public function prototype($id, $concrete)
     {
-        static::$repository[$abstract] = new Prototype($concrete);
+        $this->repository[$id] = new Prototype($concrete);
     }
 
     /**
      * Bind in singleton mode
      *
-     * @param string $abstract
+     * @param $id
      * @param $concrete
      */
-    public static function singleton(string $abstract, $concrete)
+    public function singleton($id, $concrete)
     {
-        static::$repository[$abstract] = new Singleton($concrete);
+        $this->repository[$id] = new Singleton($concrete);
     }
 
     /**
      * Check if given abstract is bound or not
      *
-     * @param string $abstract
+     * @param $id
      * @return bool
      */
-    public static function isBound(string $abstract): bool
+    public function has($id): bool
     {
-        return isset(static::$repository[$abstract]);
+        return isset($this->repository[$id]);
     }
 
     /**
-     * Check if given abstract or concrete is resolvable or not
+     * Check if the given abstract or concrete is resolvable or not
      *
-     * @param string $abstract
+     * @param $id
      * @return bool
-     * @throws ResolutionException
+     * @throws ContainerException
      */
-    public static function isResolvable(string $abstract): bool
+    protected function isResolvable($id): bool
     {
-        return static::isBound($abstract) || (class_exists($abstract) && static::isAbstract($abstract) == false);
+        return $this->has($id) || (class_exists($id) && $this->isAbstract($id) == false);
     }
 
     /**
@@ -77,38 +83,38 @@ class Container
      *
      * @param string $class
      * @return bool
-     * @throws ResolutionException
+     * @throws ContainerException
      */
-    protected static function isAbstract(string $class): bool
+    protected function isAbstract(string $class): bool
     {
         try {
             $reflection = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new ResolutionException('Cannot create reflection for ' . $class);
+            throw new ContainerException('Cannot create reflection for the class' . $class);
         }
 
         return $reflection->isAbstract();
     }
 
     /**
-     * Make right concrete of the abstract
+     * Get the right concrete of the abstract
      *
-     * @param string $abstract
+     * @param $id
      * @return mixed
-     * @throws BindingNotFoundException
-     * @throws ResolutionException
+     * @throws NotFoundException
+     * @throws ContainerException
      */
-    public static function make(string $abstract)
+    public function get($id)
     {
-        if (isset(static::$repository[$abstract]) == false) {
-            if (class_exists($abstract) && static::isAbstract($abstract) == false) {
-                return static::instantiate($abstract);
+        if (isset($this->repository[$id]) == false) {
+            if (class_exists($id) && $this->isAbstract($id) == false) {
+                return $this->instantiate($id);
             }
 
-            throw new BindingNotFoundException($abstract . ' is not bound.');
+            throw new NotFoundException($id . ' is not bound.');
         }
 
-        $binding = static::$repository[$abstract];
+        $binding = $this->repository[$id];
 
         if ($binding instanceof Singleton && $binding->instance) {
             return $binding->instance;
@@ -117,15 +123,15 @@ class Container
         $concrete = $binding->concrete;
 
         if (is_string($binding->concrete) && class_exists($binding->concrete)) {
-            $concrete = static::instantiate($binding->concrete);
+            $concrete = $this->instantiate($binding->concrete);
         } elseif (is_callable($binding->concrete)) {
-            $concrete = static::call($binding->concrete);
+            $concrete = $this->call($binding->concrete);
         } elseif (is_object($concrete) && $binding instanceof Prototype) {
             return clone $binding->concrete;
         }
 
         if ($binding instanceof Singleton) {
-            static::$repository[$abstract]->instance = $concrete;
+            $this->repository[$id]->instance = $concrete;
         }
 
         return $concrete;
@@ -136,10 +142,10 @@ class Container
      *
      * @param string $class
      * @return object
-     * @throws ResolutionException
-     * @throws BindingNotFoundException
+     * @throws ContainerException
+     * @throws NotFoundException
      */
-    protected static function instantiate(string $class)
+    protected function instantiate(string $class)
     {
         try {
             $reflection = new ReflectionClass($class);
@@ -151,7 +157,7 @@ class Container
 
                 foreach ($method->getParameters() as $parameter) {
                     if ($parameter->getClass()) {
-                        $parameters[] = static::make($parameter->getClass()->getName());
+                        $parameters[] = $this->get($parameter->getClass()->getName());
                     } else {
                         $defaultValue = $parameter->getDefaultValue();
                         $parameters[] = $defaultValue;
@@ -165,7 +171,7 @@ class Container
                 return $reflection->newInstanceArgs($parameters);
             }
         } catch (ReflectionException $e) {
-            throw new ResolutionException('Reflection error.', 0, $e);
+            throw new ContainerException('Reflection error.', 0, $e);
         }
     }
 
@@ -174,10 +180,10 @@ class Container
      *
      * @param callable $callable
      * @return object
-     * @throws ResolutionException
-     * @throws BindingNotFoundException
+     * @throws ContainerException
+     * @throws NotFoundException
      */
-    protected static function call(callable $callable)
+    protected function call(callable $callable)
     {
         try {
             $reflection = new ReflectionFunction($callable);
@@ -186,7 +192,7 @@ class Container
 
             foreach ($reflection->getParameters() as $parameter) {
                 if ($parameter->getClass()) {
-                    $parameters[] = static::make($parameter->getClass()->getName());
+                    $parameters[] = $this->get($parameter->getClass()->getName());
                 } else {
                     $defaultValue = $parameter->getDefaultValue();
                     $parameters[] = $defaultValue;
@@ -195,7 +201,7 @@ class Container
 
             return call_user_func_array($callable, $parameters);
         } catch (ReflectionException $e) {
-            throw new ResolutionException('Reflection error.', 0, $e);
+            throw new ContainerException('Reflection error.', 0, $e);
         }
     }
 }

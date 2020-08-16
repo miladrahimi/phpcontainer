@@ -27,15 +27,16 @@
     "source": "https://github.com/miladrahimi/phpcontainer/issues"
   },
   "require": {
-    "php": "^7.0"
+    "php": "^7.1",
+    "psr/container": "^1.0"
   },
   "autoload": {
     "psr-4": {
-      "MiladRahimi\\PhpContainer\\": "src/MiladRahimi/PhpContainer/",
+      "MiladRahimi\\PhpContainer\\": "src/",
       "MiladRahimi\\PhpContainer\\Tests\\": "tests/"
     }
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.0"
+    "phpunit/phpunit": "^7"
   }
 }

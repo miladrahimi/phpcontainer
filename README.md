@@ -29,8 +29,8 @@ use MiladRahimi\PhpContainer\Container;
 Container::singleton(DatabaseInterface::class, MySQL::class);
 Container::prototype(MailerInterface::class, MailTrap::class);
 
-$database = Container::make(DatabaseInterface::class);
-$mailer = Container::make(MailerInterface::class);
+$database = Container::get(DatabaseInterface::class);
+$mailer = Container::get(MailerInterface::class);
 ```
 
 The container instantiates implementation classes only once and returns them whenever you call the make method if you bind them via singleton method, otherwise, it instantiates implementation classes on any instantiation request.
@@ -43,16 +43,16 @@ use MiladRahimi\PhpContainer\Container;
 Container::prototype(InterfaceA::class, ClassA::class);
 Container::singleton(InterfaceB::class, ClassB::class);
 
-$a1 = Container::make(InterfaceA::class);
+$a1 = Container::get(InterfaceA::class);
 $a1->name = 'Something';
 
-$a2 = Container::make(InterfaceA::class);
+$a2 = Container::get(InterfaceA::class);
 echo $a2->name; // NULL
 
-$b1 = Container::make(InterfaceB::class);
+$b1 = Container::get(InterfaceB::class);
 $b1->name = 'Something';
 
-$b2 = Container::make(InterfaceB::class);
+$b2 = Container::get(InterfaceB::class);
 echo $b2->name; // 'Something'
 
 ```
@@ -66,7 +66,7 @@ use MiladRahimi\PhpContainer\Container;
 
 // No binding here!
 
-$database = Container::make(MySQL::class);
+$database = Container::get(MySQL::class);
 ```
 
 ### Constructor Auto-injection
@@ -85,7 +85,7 @@ class Notifier implements NotifierInterface {
 Container::prototype(MailInterface::class, MailTrap::class);
 Container::prototype(NotifierInterface::class, Notifier::class);
 
-$notifier = Container::make(NotifierInterface::class);
+$notifier = Container::get(NotifierInterface::class);
 ```
 
 Well, let's check what will the container do! The container is supposed to create an instance of Notifier, its constructor has some arguments, it's ok! The first argument is MailInterface, it is bound to MailTrap so the container will inject an instance of MailTrap, the second argument is SMS class, it's not bound to any implementation but it's insatiable so the container pass an instance of itself, the last argument is a primitive variable and has a default value so the container passes the same default value.
@@ -107,12 +107,12 @@ Container::singleton('time-singleton', function () {
     return microtime(true);
 });
 
-$tp1 = Container::make('time-prototype');
-$tp2 = Container::make('time-prototype');
+$tp1 = Container::get('time-prototype');
+$tp2 = Container::get('time-prototype');
 echo $tp1 == $tp2; // FALSE
 
-$ts1 = Container::make('time-singleton');
-$ts2 = Container::make('time-singleton');
+$ts1 = Container::get('time-singleton');
+$ts2 = Container::get('time-singleton');
 echo $ts1 == $ts2; // TRUE
 ```
 

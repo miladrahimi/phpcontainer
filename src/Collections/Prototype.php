@@ -2,6 +2,11 @@
 
 namespace MiladRahimi\PhpContainer\Collections;
 
+/**
+ * Class Prototype
+ *
+ * @package MiladRahimi\PhpContainer\Collections
+ */
 class Prototype
 {
     /**
