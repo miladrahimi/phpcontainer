@@ -192,7 +192,7 @@ $response = $container->call(function(MailerInterface $mailer) {
 
 ### Named bindings
 
-The previous examples show how to work with typed bindings, but in this section, another feature, named bindings, will be explained.
+The previous examples show how to work with typed bindings, but in this section, another feature, named bindings, will be demonstrated.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
