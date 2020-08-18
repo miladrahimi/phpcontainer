@@ -13,7 +13,7 @@ PSR-11 compliant dependency injection container (IoC) for PHP projects.
 
 [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection), [Inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) and [IoC Container](http://www.codeproject.com/Articles/542752/Dependency-Inversion-Principle-IoC-Container-Depen) are the outcomes for this principle.
 
-PhpContainer provides a dependency injection container (aka IoC Container) for your PHP projects.
+PhpContainer provides a [PSR-11 compliant](https://www.php-fig.org/psr/psr-11) dependency injection container (aka IoC Container) for your PHP projects.
 
 ## Installation
 
@@ -28,7 +28,7 @@ composer require miladrahimi/phpcontainer:4.*
 ### Explicit Binding
 
 Explicit binding means explicitly bind an abstraction to a concrete (implementation).
-You can bind via singleton and prototype methods.
+You can bind via `singleton()` and `prototype()` methods.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -42,7 +42,8 @@ $database = $container->get(DatabaseInterface::class);
 $mailer = $container->get(MailerInterface::class);
 ```
 
-The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method, on the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `prototype` method.
+The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method.
+On the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `prototype` method.
 
 The following example demonstrates the differences between singleton and prototype binding.
 
@@ -169,7 +170,7 @@ $user->name = 'Milad';
 
 $container = new Container();
 
-$container->prototype('user', $user);
+$container->singleton('user', $user);
 ```
 
 ### Resolving function parameters
@@ -181,7 +182,7 @@ use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->prototype(MailInterface::class, MailTrap::class);
+$container->singleton(MailInterface::class, MailTrap::class);
 
 $response = $container->call(function(MailerInterface $mailer) {
     // $mailer will be an instance of MailerInterface
@@ -190,7 +191,7 @@ $response = $container->call(function(MailerInterface $mailer) {
 
 ```
 
-### Exceptions
+### Error handling
 
 The container might raise the following exceptions:
 
