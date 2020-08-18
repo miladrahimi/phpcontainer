@@ -67,9 +67,7 @@ class ContainerTest extends TestCase
      */
     public function test_getting_implicitly_with_no_constructor_parameter_it_should_resolve()
     {
-        $a = $this->container->get(A::class);
-
-        $this->assertInstanceOf(A::class, $a);
+        $this->assertInstanceOf(A::class, $this->container->get(A::class));
     }
 
     /**
@@ -78,9 +76,7 @@ class ContainerTest extends TestCase
      */
     public function test_getting_implicitly_with_constructor_injections_it_should_resolve()
     {
-        $c = $this->container->get(C::class);
-
-        $this->assertInstanceOf(C::class, $c);
+        $this->assertInstanceOf(C::class, $this->container->get(C::class));
     }
 
     /**
@@ -116,9 +112,25 @@ class ContainerTest extends TestCase
         $this->container->prototype(B::class, B::class);
         $this->container->prototype(C::class, C::class);
 
-        $c = $this->container->get(C::class);
+        $this->assertInstanceOf(C::class, $this->container->get(C::class));
+    }
 
-        $this->assertInstanceOf(C::class, $c);
+    /**
+     * @throws NotFoundException
+     * @throws ContainerException
+     */
+    public function test_singleton_explicit_binding()
+    {
+        $this->container->singleton(Blank::class, E::class);
+
+        /** @var E $e1 */
+        $e1 = $this->container->get(Blank::class);
+        $e1->value = 'something-else';
+
+        /** @var E $e2 */
+        $e2 = $this->container->get(Blank::class);
+
+        $this->assertEquals('something-else', $e2->value);
     }
 
     /**
@@ -153,24 +165,6 @@ class ContainerTest extends TestCase
         $e2 = $this->container->get(Blank::class);
 
         $this->assertEquals('something', $e2->value);
-    }
-
-    /**
-     * @throws NotFoundException
-     * @throws ContainerException
-     */
-    public function test_singleton_explicit_binding()
-    {
-        $this->container->singleton(Blank::class, E::class);
-
-        /** @var E $e1 */
-        $e1 = $this->container->get(Blank::class);
-        $e1->value = 'something-else';
-
-        /** @var E $e2 */
-        $e2 = $this->container->get(Blank::class);
-
-        $this->assertEquals('something-else', $e2->value);
     }
 
     /**
