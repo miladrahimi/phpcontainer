@@ -159,7 +159,7 @@ class Container implements ContainerInterface
                 return $reflection->newInstanceArgs($parameters);
             }
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection failed for ' . get_class($class), 0, $e);
+            throw new ContainerException('Reflection failed for ' . $class, 0, $e);
         }
     }
 
