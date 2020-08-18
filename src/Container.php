@@ -78,7 +78,7 @@ class Container implements ContainerInterface
         try {
             $reflection = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new ContainerException('Cannot create reflection for the class' . $class);
+            throw new ContainerException('Reflection failed for ' . get_class($class));
         }
 
         return $reflection->isAbstract();
@@ -159,7 +159,7 @@ class Container implements ContainerInterface
                 return $reflection->newInstanceArgs($parameters);
             }
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection error.', 0, $e);
+            throw new ContainerException('Reflection failed for ' . get_class($class), 0, $e);
         }
     }
 
@@ -171,7 +171,7 @@ class Container implements ContainerInterface
      * @throws ContainerException
      * @throws NotFoundException
      */
-    protected function call(callable $callable)
+    public function call(callable $callable)
     {
         try {
             $reflection = new ReflectionFunction($callable);
@@ -189,7 +189,7 @@ class Container implements ContainerInterface
 
             return call_user_func_array($callable, $parameters);
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection error.', 0, $e);
+            throw new ContainerException('Reflection failed.', 0, $e);
         }
     }
 }

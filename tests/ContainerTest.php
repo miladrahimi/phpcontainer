@@ -54,7 +54,7 @@ class ContainerTest extends TestCase
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function test_getting_unbound_abstraction()
+    public function test_getting_unbound_abstraction_it_should_fail()
     {
         $this->expectException(NotFoundException::class);
 
@@ -65,7 +65,7 @@ class ContainerTest extends TestCase
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function test_getting_implicitly_with_no_constructor_parameter()
+    public function test_getting_implicitly_with_no_constructor_parameter_it_should_resolve()
     {
         $a = $this->container->get(A::class);
 
@@ -76,7 +76,7 @@ class ContainerTest extends TestCase
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function test_getting_implicitly_with_constructor_injections()
+    public function test_getting_implicitly_with_constructor_injections_it_should_resolve()
     {
         $c = $this->container->get(C::class);
 
@@ -87,7 +87,7 @@ class ContainerTest extends TestCase
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function test_getting_implicitly_with_constructor_parameter_with_default_value()
+    public function test_getting_implicitly_with_constructor_parameter_with_default_value_it_should_resolve()
     {
         /** @var E $e */
         $e = $this->container->get(E::class);
@@ -100,7 +100,7 @@ class ContainerTest extends TestCase
      * @throws ContainerException
      * @throws NotFoundException
      */
-    public function test_getting_implicitly_with_constructor_parameter_without_default_value()
+    public function test_getting_implicitly_with_constructor_parameter_without_default_value_it_should_fail()
     {
         $this->expectException(ContainerException::class);
         $this->container->get(F::class);
@@ -110,7 +110,7 @@ class ContainerTest extends TestCase
      * @throws NotFoundException
      * @throws ContainerException
      */
-    public function test_getting_explicitly_with_constructor_auto_injection()
+    public function test_getting_explicitly_with_constructor_auto_injection_it_should_resolve()
     {
         $this->container->prototype(A::class, A::class);
         $this->container->prototype(B::class, B::class);
@@ -190,7 +190,12 @@ class ContainerTest extends TestCase
         $this->assertNotEquals($t1, $t2);
     }
 
-    public function test_invalid_callable_it_should_throw_exception()
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     * @noinspection PhpUnusedParameterInspection
+     */
+    public function test_getting_with_invalid_callable_bound_it_should_fail()
     {
         $this->container->prototype('time', function (int $requiredArg) {
             return microtime(true);
@@ -302,5 +307,35 @@ class ContainerTest extends TestCase
         $value = $this->container->get('ABC');
 
         $this->assertEquals('XYZ', $value);
+    }
+
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    public function test_call_with_free_function_it_should_only_call_it()
+    {
+        $response = $this->container->call(function () {
+            return 666;
+        });
+
+        $this->assertEquals($response, 666);
+    }
+
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    public function test_call_with_some_dependencies_it_should_resolve_em()
+    {
+        $value = mt_rand(0, 1000000);
+
+        $this->container->prototype(Blank::class, new A($value));
+
+        $response = $this->container->call(function (Blank $a) {
+            return $a->value;
+        });
+
+        $this->assertEquals($response, $value);
     }
 }

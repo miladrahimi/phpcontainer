@@ -172,6 +172,24 @@ $container = new Container();
 $container->prototype('user', $user);
 ```
 
+### Resolving function parameters
+
+The example below demonstrates how to resolve a function parameters.
+
+```php
+use MiladRahimi\PhpContainer\Container;
+
+$container = new Container();
+
+$container->prototype(MailInterface::class, MailTrap::class);
+
+$response = $container->call(function(MailerInterface $mailer) {
+    // $mailer will be an instance of MailerInterface
+    return $mailer->send('info@example.com', 'Hello...');
+});
+
+```
+
 ### Exceptions
 
 The container might raise the following exceptions:
