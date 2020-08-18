@@ -199,7 +199,7 @@ use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->singleton('number', 666);
+$container->singleton('$number', 666);
 
 $container->call(function($number) {
     echo $number; // 666
