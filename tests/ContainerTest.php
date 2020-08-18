@@ -332,4 +332,17 @@ class ContainerTest extends TestCase
 
         $this->assertEquals($response, $value);
     }
+
+    public function test_call_with_named_binding_it_should_resolve()
+    {
+        $number = mt_rand(0, 1000000);
+
+        $this->container->prototype('number', $number);
+
+        $response = $this->container->call(function ($number) {
+            return $number;
+        });
+
+        $this->assertEquals($response, $number);
+    }
 }

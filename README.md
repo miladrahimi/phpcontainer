@@ -188,7 +188,22 @@ $response = $container->call(function(MailerInterface $mailer) {
     // $mailer will be an instance of MailerInterface
     return $mailer->send('info@example.com', 'Hello...');
 });
+```
 
+### Named bindings
+
+The previous examples show how to work with typed bindings, but in this section, another feature, named bindings, will be explained.
+
+```php
+use MiladRahimi\PhpContainer\Container;
+
+$container = new Container();
+
+$container->singleton('number', 666);
+
+$container->call(function($number) {
+    echo $number; // 666
+});
 ```
 
 ### Error handling
