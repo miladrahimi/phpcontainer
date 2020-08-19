@@ -12,6 +12,7 @@ use MiladRahimi\PhpContainer\Tests\Classes\C;
 use MiladRahimi\PhpContainer\Tests\Classes\D;
 use MiladRahimi\PhpContainer\Tests\Classes\E;
 use MiladRahimi\PhpContainer\Tests\Classes\F;
+use MiladRahimi\PhpContainer\Tests\Classes\G;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
@@ -333,6 +334,10 @@ class ContainerTest extends TestCase
         $this->assertEquals($response, $value);
     }
 
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
     public function test_call_with_singleton_named_binding_it_should_resolve()
     {
         $number = mt_rand(0, 1000000);
@@ -346,6 +351,10 @@ class ContainerTest extends TestCase
         $this->assertEquals($response, $number);
     }
 
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
     public function test_call_with_prototype_named_binding_it_should_resolve()
     {
         $number = mt_rand(0, 1000000);
@@ -357,5 +366,19 @@ class ContainerTest extends TestCase
         });
 
         $this->assertEquals($response, $number);
+    }
+
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    public function test_calling_method_it_should_resolve()
+    {
+        $object = new G();
+
+        $this->container->singleton('$number', 666);
+        $this->container->call([$object, 'setNumber']);
+
+        $this->assertEquals($object->number, 666);
     }
 }

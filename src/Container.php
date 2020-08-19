@@ -10,6 +10,8 @@ use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionMethod;
+use ReflectionParameter;
 
 /**
  * Class Container
@@ -139,18 +141,9 @@ class Container implements ContainerInterface
             $reflection = new ReflectionClass($class);
 
             $parameters = [];
-
             if ($reflection->hasMethod('__construct')) {
                 $method = $reflection->getMethod('__construct');
-
-                foreach ($method->getParameters() as $parameter) {
-                    if ($parameter->getClass()) {
-                        $parameters[] = $this->get($parameter->getClass()->getName());
-                    } else {
-                        $defaultValue = $parameter->getDefaultValue();
-                        $parameters[] = $defaultValue;
-                    }
-                }
+                $parameters = $this->arrangeParameters($method->getParameters());
             }
 
             if (count($parameters) == 0) {
@@ -166,32 +159,48 @@ class Container implements ContainerInterface
     /**
      * Call the concrete callable
      *
-     * @param callable $callable
+     * @param callable|array $callable
      * @return object
      * @throws ContainerException
      * @throws NotFoundException
      */
-    public function call(callable $callable)
+    public function call($callable)
     {
         try {
-            $reflection = new ReflectionFunction($callable);
+            $reflection = is_array($callable) ?
+                new ReflectionMethod($callable[0], $callable[1]) :
+                new ReflectionFunction($callable);
 
-            $parameters = [];
-
-            foreach ($reflection->getParameters() as $parameter) {
-                if ($parameter->getClass()) {
-                    $parameters[] = $this->get($parameter->getClass()->getName());
-                } elseif (isset($this->repository['$' . $parameter->getName()])) {
-                    $parameters[] = $this->get('$' . $parameter->getName());
-                } else {
-                    $defaultValue = $parameter->getDefaultValue();
-                    $parameters[] = $defaultValue;
-                }
-            }
-
-            return call_user_func_array($callable, $parameters);
+            return call_user_func_array($callable, $this->arrangeParameters($reflection->getParameters()));
         } catch (ReflectionException $e) {
             throw new ContainerException('Reflection failed.', 0, $e);
         }
+    }
+
+    /**
+     * Retrieve and arrange method/function parameters (dependencies)
+     *
+     * @param ReflectionParameter[] $reflectionParameters
+     * @return array
+     * @throws ContainerException
+     * @throws NotFoundException
+     * @throws ReflectionException
+     */
+    private function arrangeParameters(array $reflectionParameters = [])
+    {
+        $parameters = [];
+
+        foreach ($reflectionParameters as $parameter) {
+            if ($parameter->getClass()) {
+                $parameters[] = $this->get($parameter->getClass()->getName());
+            } elseif (isset($this->repository['$' . $parameter->getName()])) {
+                $parameters[] = $this->get('$' . $parameter->getName());
+            } else {
+                $defaultValue = $parameter->getDefaultValue();
+                $parameters[] = $defaultValue;
+            }
+        }
+
+        return $parameters;
     }
 }
