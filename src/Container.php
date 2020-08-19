@@ -160,7 +160,7 @@ class Container implements ContainerInterface
      * Call the concrete callable
      *
      * @param callable|array $callable
-     * @return object
+     * @return mixed
      * @throws ContainerException
      * @throws NotFoundException
      */
@@ -186,7 +186,7 @@ class Container implements ContainerInterface
      * @throws NotFoundException
      * @throws ReflectionException
      */
-    private function arrangeParameters(array $reflectionParameters = [])
+    private function arrangeParameters(array $reflectionParameters = []): array
     {
         $parameters = [];
 
