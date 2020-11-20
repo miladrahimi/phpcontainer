@@ -388,16 +388,29 @@ class ContainerTest extends TestCase
      */
     public function test_binding_to_a_closure_with_name()
     {
-        $sum = function($a, $b) {
+        $sum = function ($a, $b) {
             return $a + $b;
         };
 
         $this->container->closure('$sum', $sum);
 
-        $r = $this->container->call(function($sum) {
+        $r = $this->container->call(function ($sum) {
             return $sum(7, 6);
         });
 
         $this->assertEquals(13, $r);
+    }
+
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    public function test_deleting_a_binding()
+    {
+        $this->container->transient('temp', 'Bye!');
+        $this->container->delete('temp');
+
+        $this->expectException(NotFoundException::class);
+        $this->container->get('temp');
     }
 }

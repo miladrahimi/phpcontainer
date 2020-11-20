@@ -140,6 +140,16 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Get ride of the given binding
+     *
+     * @param $id
+     */
+    public function delete($id)
+    {
+        unset($this->repository[$id]);
+    }
+
+    /**
      * Instantiate the concrete class
      *
      * @param string $class
