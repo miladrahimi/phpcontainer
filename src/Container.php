@@ -192,17 +192,17 @@ class Container implements ContainerInterface
     /**
      * Retrieve and arrange method/function parameters (dependencies)
      *
-     * @param ReflectionParameter[] $reflectionParameters
+     * @param ReflectionParameter[] $reflectedParameters
      * @return array
      * @throws ContainerException
      * @throws NotFoundException
      * @throws ReflectionException
      */
-    private function arrangeParameters(array $reflectionParameters = []): array
+    private function arrangeParameters(array $reflectedParameters = []): array
     {
         $parameters = [];
 
-        foreach ($reflectionParameters as $parameter) {
+        foreach ($reflectedParameters as $parameter) {
             if (isset($this->repository['$' . $parameter->getName()])) {
                 $parameters[] = $this->get('$' . $parameter->getName());
             } elseif ($parameter->getClass()) {

@@ -20,7 +20,7 @@ PhpContainer provides a [PSR-11 compliant](https://www.php-fig.org/psr/psr-11) d
 You can add PhpContainer to your project via Composer with the following command:
 
 ```bash
-composer require miladrahimi/phpcontainer:4.*
+composer require miladrahimi/phpcontainer:5.*
 ```
 
 ## Documentation
@@ -45,7 +45,7 @@ $mailer = $container->get(MailerInterface::class);
 The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method.
 On the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `transient` method.
 
-The following example demonstrates the differences between singleton and transient binding.
+The following example demonstrates the differences between singleton and transient bindings.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -186,7 +186,7 @@ $container->singleton(MailInterface::class, MailTrap::class);
 
 $response = $container->call(function(MailerInterface $mailer) {
     // $mailer will be an instance of MailerInterface
-    return $mailer->send('info@example.com', 'Hello...');
+    $mailer->send('info@example.com', 'Hello...');
 });
 ```
 
@@ -204,6 +204,27 @@ $container->singleton('$number', 666);
 $container->call(function($number) {
     echo $number; // 666
 });
+```
+
+### Binding to a closure
+
+In the previous section, you can see when the container faces a Closure; it will run the Closure and grasp what the Closure returns. Sometimes you need to bind something to a Closure and don't want the container to run it. There is a different binding method for binding closures. See the following examples.
+
+```php
+use MiladRahimi\PhpContainer\Container;
+
+$sum = function($a, $b) {
+    return $a + $b;
+};
+
+$container = new Container();
+
+$container->closure('$sum', $sum);
+$result = $container->call(function($sum) {
+    return $sum(7, 6);
+});
+
+echo $result; // 13
 ```
 
 ### Error handling
