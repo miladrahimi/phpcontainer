@@ -34,7 +34,7 @@ class ContainerTest extends TestCase
 
     public function test_has_method()
     {
-        $this->container->prototype(A::class, A::class);
+        $this->container->transient(A::class, A::class);
         $this->container->singleton(B::class, C::class);
 
         $this->assertTrue($this->container->has(A::class));
@@ -44,7 +44,7 @@ class ContainerTest extends TestCase
 
     public function test_empty_method()
     {
-        $this->container->prototype(Blank::class, A::class);
+        $this->container->transient(Blank::class, A::class);
         $this->assertTrue($this->container->has(Blank::class));
 
         $this->container->empty();
@@ -109,9 +109,9 @@ class ContainerTest extends TestCase
      */
     public function test_getting_explicitly_with_constructor_auto_injection_it_should_resolve()
     {
-        $this->container->prototype(A::class, A::class);
-        $this->container->prototype(B::class, B::class);
-        $this->container->prototype(C::class, C::class);
+        $this->container->transient(A::class, A::class);
+        $this->container->transient(B::class, B::class);
+        $this->container->transient(C::class, C::class);
 
         $this->assertInstanceOf(C::class, $this->container->get(C::class));
     }
@@ -156,7 +156,7 @@ class ContainerTest extends TestCase
      */
     public function test_prototype_explicit_binding()
     {
-        $this->container->prototype(Blank::class, E::class);
+        $this->container->transient(Blank::class, E::class);
 
         /** @var E $e1 */
         $e1 = $this->container->get(Blank::class);
@@ -174,7 +174,7 @@ class ContainerTest extends TestCase
      */
     public function test_prototype_callable_binding_with_no_parameter()
     {
-        $this->container->prototype('time', function () {
+        $this->container->transient('time', function () {
             return microtime(true);
         });
 
@@ -192,7 +192,7 @@ class ContainerTest extends TestCase
      */
     public function test_getting_with_invalid_callable_bound_it_should_fail()
     {
-        $this->container->prototype('time', function (int $requiredArg) {
+        $this->container->transient('time', function (int $requiredArg) {
             return microtime(true);
         });
 
@@ -227,7 +227,7 @@ class ContainerTest extends TestCase
             return $value;
         };
 
-        $this->container->prototype('string', $f);
+        $this->container->transient('string', $f);
 
         $x = $this->container->get('string');
 
@@ -242,7 +242,7 @@ class ContainerTest extends TestCase
     {
         $this->container->singleton(Blank::class, E::class);
 
-        $this->container->prototype('element', function (Blank $e, B $b) {
+        $this->container->transient('element', function (Blank $e, B $b) {
             return $e instanceof E && $b instanceof B;
         });
 
@@ -280,7 +280,7 @@ class ContainerTest extends TestCase
         $a = new A();
         $a->value = 'something';
 
-        $this->container->prototype(Blank::class, $a);
+        $this->container->transient(Blank::class, $a);
 
         $a1 = $this->container->get(Blank::class);
         $a1->value = 'something-else';
@@ -297,7 +297,7 @@ class ContainerTest extends TestCase
      */
     public function test_scalar_binding()
     {
-        $this->container->prototype('ABC', 'XYZ');
+        $this->container->transient('ABC', 'XYZ');
 
         $value = $this->container->get('ABC');
 
@@ -314,7 +314,7 @@ class ContainerTest extends TestCase
             return 666;
         });
 
-        $this->assertEquals($response, 666);
+        $this->assertEquals(666, $response);
     }
 
     /**
@@ -325,13 +325,13 @@ class ContainerTest extends TestCase
     {
         $value = mt_rand(0, 1000000);
 
-        $this->container->prototype(Blank::class, new A($value));
+        $this->container->transient(Blank::class, new A($value));
 
         $response = $this->container->call(function (Blank $a) {
             return $a->value;
         });
 
-        $this->assertEquals($response, $value);
+        $this->assertEquals($value, $response);
     }
 
     /**
@@ -348,7 +348,7 @@ class ContainerTest extends TestCase
             return $number;
         });
 
-        $this->assertEquals($response, $number);
+        $this->assertEquals($number, $response);
     }
 
     /**
@@ -359,13 +359,13 @@ class ContainerTest extends TestCase
     {
         $number = mt_rand(0, 1000000);
 
-        $this->container->prototype('$number', $number);
+        $this->container->transient('$number', $number);
 
         $response = $this->container->call(function ($number) {
             return $number;
         });
 
-        $this->assertEquals($response, $number);
+        $this->assertEquals($number, $response);
     }
 
     /**
@@ -379,6 +379,25 @@ class ContainerTest extends TestCase
         $this->container->singleton('$number', 666);
         $this->container->call([$object, 'setNumber']);
 
-        $this->assertEquals($object->number, 666);
+        $this->assertEquals(666, $object->number);
+    }
+
+    /**
+     * @throws ContainerException
+     * @throws NotFoundException
+     */
+    public function test_binding_to_a_closure_with_name()
+    {
+        $sum = function($a, $b) {
+            return $a + $b;
+        };
+
+        $this->container->closure('$sum', $sum);
+
+        $r = $this->container->call(function($sum) {
+            return $sum(7, 6);
+        });
+
+        $this->assertEquals(13, $r);
     }
 }

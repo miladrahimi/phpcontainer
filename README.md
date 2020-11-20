@@ -28,7 +28,7 @@ composer require miladrahimi/phpcontainer:4.*
 ### Explicit Binding
 
 Explicit binding means explicitly bind an abstraction to a concrete (implementation).
-You can bind via `singleton()` and `prototype()` methods.
+You can bind via `singleton()` and `transient()` methods.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -36,23 +36,23 @@ use MiladRahimi\PhpContainer\Container;
 $container = new Container();
 
 $container->singleton(DatabaseInterface::class, MySQL::class);
-$container->prototype(MailerInterface::class, MailTrap::class);
+$container->transient(MailerInterface::class, MailTrap::class);
 
 $database = $container->get(DatabaseInterface::class);
 $mailer = $container->get(MailerInterface::class);
 ```
 
 The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method.
-On the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `prototype` method.
+On the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `transient` method.
 
-The following example demonstrates the differences between singleton and prototype binding.
+The following example demonstrates the differences between singleton and transient binding.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->prototype(InterfaceA::class, ClassA::class);
+$container->transient(InterfaceA::class, ClassA::class);
 $container->singleton(InterfaceB::class, ClassB::class);
 
 $a1 = $container->get(InterfaceA::class);
@@ -99,8 +99,8 @@ class Notifier implements NotifierInterface {
 
 $container = new Container();
 
-$container->prototype(MailInterface::class, MailTrap::class);
-$container->prototype(NotifierInterface::class, Notifier::class);
+$container->transient(MailInterface::class, MailTrap::class);
+$container->transient(NotifierInterface::class, Notifier::class);
 
 $notifier = $container->get(NotifierInterface::class);
 ```
@@ -108,9 +108,9 @@ $notifier = $container->get(NotifierInterface::class);
 Well, let's check what will the container do!
 The container is supposed to create an instance of Notifier.
 The Notifier constructor has some arguments, it's ok!
-The first argument is MailInterface and it is already bound to MailTrap so the container will inject an instance of MailTrap.
-The second argument is SMS class, it's not bound to any implementation but it's insatiable so the container instantiates and passes an instance of it.
-The last argument is a primitive variable and has a default value so the container passes the same default value.
+The first argument is MailInterface, and it is already bound to MailTrap, so the container will inject an instance of MailTrap.
+The second argument is SMS class, it's not bound to any implementation, but it's insatiable, so the container instantiates and passes an instance of it.
+The last argument is a primitive variable and has a default value, so the container passes the same default value.
 
 Constructor auto-injection is also available for implicit bindings.
 
@@ -123,7 +123,7 @@ use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->prototype('time-prototype', function () {
+$container->transient('time-transient', function () {
     return microtime(true);
 });
 
@@ -131,8 +131,8 @@ $container->singleton('time-singleton', function () {
     return microtime(true);
 });
 
-$tp1 = $container->get('time-prototype');
-$tp2 = $container->get('time-prototype');
+$tp1 = $container->get('time-transient');
+$tp2 = $container->get('time-transient');
 echo $tp1 == $tp2; // FALSE
 
 $ts1 = $container->get('time-singleton');
@@ -148,8 +148,8 @@ use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->prototype(MailerInterface::class, MailTrap::class);
-$container->prototype('notifier', function (MailerInterface $mailer) {
+$container->transient(MailerInterface::class, MailTrap::class);
+$container->transient('notifier', function (MailerInterface $mailer) {
     $notifier = new Notifier();
     $notifier->setMailer($mailer);
     
@@ -160,7 +160,7 @@ $container->prototype('notifier', function (MailerInterface $mailer) {
 ### Object binding
 
 You can also bind an abstraction to an object.
-In this case, singleton binding is used to release the original object on resolve, and prototype binding is also used to release a clone of the object each time.
+In this case, singleton binding is used to release the original object on resolve, and transient binding is also used to release a clone of the object each time.
 
 ```php
 use MiladRahimi\PhpContainer\Container;

@@ -2,8 +2,9 @@
 
 namespace MiladRahimi\PhpContainer;
 
-use MiladRahimi\PhpContainer\Collections\Prototype;
-use MiladRahimi\PhpContainer\Collections\Singleton;
+use Closure;
+use MiladRahimi\PhpContainer\Types\Transient;
+use MiladRahimi\PhpContainer\Types\Singleton;
 use MiladRahimi\PhpContainer\Exceptions\NotFoundException;
 use MiladRahimi\PhpContainer\Exceptions\ContainerException;
 use Psr\Container\ContainerInterface;
@@ -23,7 +24,7 @@ class Container implements ContainerInterface
     /**
      * Binding repository
      *
-     * @var Prototype[]|Singleton[]
+     * @var Transient[]|Singleton[]
      */
     private $repository = [];
 
@@ -36,14 +37,14 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Bind in prototype mode
+     * Bind in transient mode
      *
      * @param $id
      * @param $concrete
      */
-    public function prototype($id, $concrete)
+    public function transient($id, $concrete)
     {
-        $this->repository[$id] = new Prototype($concrete);
+        $this->repository[$id] = new Transient($concrete);
     }
 
     /**
@@ -55,6 +56,17 @@ class Container implements ContainerInterface
     public function singleton($id, $concrete)
     {
         $this->repository[$id] = new Singleton($concrete);
+    }
+
+    /**
+     * Bind to a closure
+     *
+     * @param $id
+     * @param Closure $closure
+     */
+    public function closure($id, Closure $closure)
+    {
+        $this->repository[$id] = new Types\Closure($closure);
     }
 
     /**
@@ -106,22 +118,22 @@ class Container implements ContainerInterface
 
         $binding = $this->repository[$id];
 
-        if ($binding instanceof Singleton && $binding->instance) {
-            return $binding->instance;
+        if ($binding instanceof Singleton && $binding->getInstance()) {
+            return $binding->getInstance();
         }
 
-        $concrete = $binding->concrete;
+        $concrete = $binding->getConcrete();
 
-        if (is_string($binding->concrete) && class_exists($binding->concrete)) {
-            $concrete = $this->instantiate($binding->concrete);
-        } elseif (is_callable($binding->concrete)) {
-            $concrete = $this->call($binding->concrete);
-        } elseif (is_object($concrete) && $binding instanceof Prototype) {
-            return clone $binding->concrete;
+        if (is_string($concrete) && class_exists($concrete)) {
+            $concrete = $this->instantiate($concrete);
+        } elseif (is_callable($concrete) && !($binding instanceof Types\Closure)) {
+            $concrete = $this->call($concrete);
+        } elseif (is_object($concrete) && $binding instanceof Transient) {
+            return clone $concrete;
         }
 
         if ($binding instanceof Singleton) {
-            $this->repository[$id]->instance = $concrete;
+            $this->repository[$id]->setInstance($concrete);
         }
 
         return $concrete;
@@ -167,9 +179,9 @@ class Container implements ContainerInterface
     public function call($callable)
     {
         try {
-            $reflection = is_array($callable) ?
-                new ReflectionMethod($callable[0], $callable[1]) :
-                new ReflectionFunction($callable);
+            $reflection = is_array($callable)
+                ? new ReflectionMethod($callable[0], $callable[1])
+                : new ReflectionFunction($callable);
 
             return call_user_func_array($callable, $this->arrangeParameters($reflection->getParameters()));
         } catch (ReflectionException $e) {
