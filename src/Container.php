@@ -191,10 +191,10 @@ class Container implements ContainerInterface
         $parameters = [];
 
         foreach ($reflectionParameters as $parameter) {
-            if ($parameter->getClass()) {
-                $parameters[] = $this->get($parameter->getClass()->getName());
-            } elseif (isset($this->repository['$' . $parameter->getName()])) {
+            if (isset($this->repository['$' . $parameter->getName()])) {
                 $parameters[] = $this->get('$' . $parameter->getName());
+            } elseif ($parameter->getClass()) {
+                $parameters[] = $this->get($parameter->getClass()->getName());
             } else {
                 $defaultValue = $parameter->getDefaultValue();
                 $parameters[] = $defaultValue;
