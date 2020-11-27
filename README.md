@@ -9,15 +9,15 @@
 PSR-11 compliant dependency injection (Inversion of Control) container for PHP projects.
 
 Features:
-* Singleton, transient, and closure binding.
-* Explicit and implicit binding.
-* Typed and named binding.
-* Constructor and Closure auto-injection for nested resolving.
-* Smart resolving using explicit and implicit binding and default values.
-* Binding using closures.
-* Binding to objects.
-* Direct class instantiating and dependency injection.
-* Direct function, closure, and method calling and dependency injection.
+* Singleton, transient, and Closure binding
+* Explicit and implicit binding
+* Typed and named binding
+* Constructor and Closure auto-injection for nested resolving
+* Smart resolving using explicit and implicit binding and default values
+* Binding using Closure
+* Binding to objects
+* Direct class instantiating and dependency injection
+* Direct function, closure, and method calling and dependency injection
 
 ## Overview
 [Dependency Inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle) is one of the most important Object-oriented design principles.
@@ -59,13 +59,13 @@ $sum = $container->get('sum');
 
 #### Binding methods
 
-* Singleton binding: When you bind using the `singleton` method, the container creates the concrete only once and return it whenever you need it.
+* **Singleton binding**: When you bind using the `singleton` method, the container creates the concrete only once and return it whenever you need it.
 
-* Transient binding: When you bind using the `transient` method, the container clones or creates a brand-new concrete each time you need it.
+* **Transient binding**: When you bind using the `transient` method, the container clones or creates a brand-new concrete each time you need it.
 
-* Closure binding: You can only bind closures using the `closure` method. Then the container returns the closure when you need it. It prevents the container call the closure (it is the default behavior).
+* **Closure binding**: You can only bind closures using the `closure` method. Then the container returns the closure when you need it. It prevents the container call the closure (it is the default behavior).
 
-The following example demonstrates the differences between singleton and transient bindings.
+The following example demonstrates the differences between singleton and transient binding.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -92,7 +92,7 @@ echo $b2->name; // 'Something'
 ### Implicit Binding
 
 The container tries to instantiate the needed class when there is no concrete bound.
-In the example below, the container instantiates the `MySQL` class and returns it.
+In the example below, the container instantiates the `MySQL` class and returns the instance.
 The container raises an error when it cannot instantiate (for example, it's an interface or abstract class).
 
 ```php
@@ -150,9 +150,9 @@ The last argument is a primitive variable and has a default value, so the contai
 
 Constructor auto-injection is also available for implicit bindings.
 
-### Binding using Closures
+### Binding using Closure
 
-The following example illustrates how to bind using Closures.
+The following example illustrates how to bind using Closure.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
