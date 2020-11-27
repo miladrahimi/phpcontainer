@@ -1,6 +1,6 @@
 <?php
 
-namespace MiladRahimi\PhpContainer\Bindings;
+namespace MiladRahimi\PhpContainer\Types;
 
 use Closure as PClosure;
 

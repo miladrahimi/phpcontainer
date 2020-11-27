@@ -6,7 +6,18 @@
 
 # PhpContainer
 
-PSR-11 compliant dependency injection container (IoC) for PHP projects.
+PSR-11 compliant dependency injection (Inversion of Control) container for PHP projects.
+
+Features:
+* Singleton, transient, and closure binding.
+* Explicit and implicit binding.
+* Typed and named binding.
+* Constructor and Closure auto-injection for nested resolving.
+* Smart resolving using explicit and implicit binding and default values.
+* Binding using closures.
+* Binding to objects.
+* Direct class instantiating and dependency injection.
+* Direct function, closure, and method calling and dependency injection.
 
 ## Overview
 [Dependency Inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle) is one of the most important Object-oriented design principles.
@@ -28,7 +39,7 @@ composer require miladrahimi/phpcontainer:5.*
 ### Explicit Binding
 
 Explicit binding means explicitly bind an abstraction to a concrete (implementation).
-You can bind via `singleton()`, `transient()` and `closure()` methods.
+You can use the `singleton()`, `transient()` and `closure()` methods to bind explicitly.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -37,13 +48,22 @@ $container = new Container();
 
 $container->singleton(DatabaseInterface::class, MySQL::class);
 $container->transient(MailerInterface::class, MailTrap::class);
+$container->closure('sum', function($a, $b) {
+    return $a + $b;
+});
 
 $database = $container->get(DatabaseInterface::class);
 $mailer = $container->get(MailerInterface::class);
+$sum = $container->get('sum');
 ```
 
-The container instantiates implementation classes only once and returns them whenever you call the `get` method if you bind them via the `singleton` method.
-On the other hand, it instantiates implementation classes on any instantiation request, if you bind them via the `transient` method.
+#### Binding methods
+
+* Singleton binding: When you bind using the `singleton` method, the container creates the concrete only once and return it whenever you need it.
+
+* Transient binding: When you bind using the `transient` method, the container clones or creates a brand-new concrete each time you need it.
+
+* Closure binding: You can only bind closures using the `closure` method. Then the container returns the closure when you need it. It prevents the container call the closure (it is the default behavior).
 
 The following example demonstrates the differences between singleton and transient bindings.
 
@@ -71,22 +91,38 @@ echo $b2->name; // 'Something'
 
 ### Implicit Binding
 
-You can retrieve implementation classes from the container instead of using the new keyword to instantiate them.
-It could help mock orphan implementation classes.
+The container tries to instantiate the needed class when there is no concrete bound.
+In the example below, the container instantiates the `MySQL` class and returns it.
+The container raises an error when it cannot instantiate (for example, it's an interface or abstract class).
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-// No binding here!
+// No (explicit) binding here!
 
 $database = $container->get(MySQL::class);
 ```
 
+### Binding to objects
+
+You can bind abstractions to objects.
+In this case, you can use singleton binding to get the original object when you need it or transient binding to get a clone of the object each time you need it.
+
+```php
+use MiladRahimi\PhpContainer\Container;
+
+$user = new User();
+$user->name = 'Milad';
+
+$container = new Container();
+$container->singleton('user', $user);
+```
+
 ### Constructor Auto-injection
 
-Implementation classes can have constructor parameters that have default values or resolvable by the container.
+Concrete classes can have constructor parameters that have default values or resolvable by the container.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -105,126 +141,103 @@ $container->transient(NotifierInterface::class, Notifier::class);
 $notifier = $container->get(NotifierInterface::class);
 ```
 
-Well, let's check what will the container do!
-The container is supposed to create an instance of Notifier.
-The Notifier constructor has some arguments, it's ok!
-The first argument is MailInterface, and it is already bound to MailTrap, so the container will inject an instance of MailTrap.
-The second argument is SMS class, it's not bound to any implementation, but it's insatiable, so the container instantiates and passes an instance of it.
-The last argument is a primitive variable and has a default value, so the container passes the same default value.
+Well, let's check what the container does!
+The container tries to create an instance of Notifier.
+The Notifier constructor has some arguments. It's ok!
+The first argument is MailInterface, and it's already bound to MailTrap. The container injects an instance of MailTrap.
+The second argument is the `Sms` class. It's not bound to any implementation, but it's insatiable, so the container instantiates and passes an instance of it.
+The last argument is a primitive variable and has a default value, so the container passes the default value.
 
 Constructor auto-injection is also available for implicit bindings.
 
-### Closure as implementation
+### Binding using Closures
 
-Following example illustrates how to use closure as implementation.
-
-```php
-use MiladRahimi\PhpContainer\Container;
-
-$container = new Container();
-
-$container->transient('time-transient', function () {
-    return microtime(true);
-});
-
-$container->singleton('time-singleton', function () {
-    return microtime(true);
-});
-
-$tp1 = $container->get('time-transient');
-$tp2 = $container->get('time-transient');
-echo $tp1 == $tp2; // FALSE
-
-$ts1 = $container->get('time-singleton');
-$ts2 = $container->get('time-singleton');
-echo $ts1 == $ts2; // TRUE
-```
-
-Just like class constructors, closures are also able to have arguments.
-The container will try to inject/pass appropriate implementations/values to closures.
+The following example illustrates how to bind using Closures.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->transient(MailerInterface::class, MailTrap::class);
-$container->transient('notifier', function (MailerInterface $mailer) {
-    $notifier = new Notifier();
-    $notifier->setMailer($mailer);
-    
-    return $notifier;
+$container->singleton(Config::class, function () {
+    return new JsonConfig('/path/to/config.json');
+});
+
+// $config would be auto-injected
+$container->singleton(Database::class, function (Config $config) {
+    return new MySQL(
+        $config->get('database.host'),
+        $config->get('database.port'),
+        $config->get('database.name'),
+        $config->get('database.username'),
+        $config->get('database.password')
+    );
 });
 ```
 
-### Object binding
+The container calls the Closure once in singleton binding and calls it each time needed in transient binding.
+If you want to bind an abstraction to a Closure and don't want the container to call the Closure, you can use the `closure()` binding method instead.
 
-You can also bind an abstraction to an object.
-In this case, singleton binding is used to release the original object on resolve, and transient binding is also used to release a clone of the object each time.
-
-```php
-use MiladRahimi\PhpContainer\Container;
-
-$user = new User();
-$user->name = 'Milad';
-
-$container = new Container();
-
-$container->singleton('user', $user);
-```
-
-### Resolving function parameters
-
-The example below demonstrates how to resolve a function parameters.
+### Direct Closure, function, and method call
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
-
 $container->singleton(MailInterface::class, MailTrap::class);
 
+// Direct Closure call
 $response = $container->call(function(MailerInterface $mailer) {
-    // $mailer will be an instance of MailerInterface
-    $mailer->send('info@example.com', 'Hello...');
+    return $mailer->send('info@example.com', 'Hello...');
 });
+
+// Direct function call
+function sendMail(MailerInterface $mailer) {
+    return $mailer->send('info@example.com', 'Hello...');
+}
+$response = $container->call('sendMail');
+
+// Direct method call
+class UserManager {
+    function sendMail(MailerInterface $mailer) {
+        return $mailer->send('info@example.com', 'Hello...');
+    }
+}
+$response = $container->call([UserManager::class, 'sendMail']);
 ```
 
-### Named bindings
+### Direct class instantiating
 
-The previous examples show how to work with typed bindings, but in this section, another feature, named bindings, will be demonstrated.
+You can instantiate classes using the container. In this case, the container injects constructor dependencies and returns an instance.
+
+```php
+use MiladRahimi\PhpContainer\Container;
+
+$container = new Container();
+$controller = $container->instantiate(Controller::class);
+```
+
+### Type-based and name-based binding
+
+PhpContainer supports typed-based and name-based binding.
+The following example demonstrates these types of binding.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
 $container = new Container();
 
-$container->singleton('$number', 666);
+// Type-based binding
+$container->singleton(Database::class, MySQL::class);
+$container->call(function(Database $database) {
+    // ...
+});
 
+// Name-based binding
+$container->singleton('$number', 666);
 $container->call(function($number) {
     echo $number; // 666
 });
-```
-
-### Binding to a closure
-
-In the previous section, you can see when the container faces a Closure; it will run the Closure and grasp what the Closure returns. Sometimes you need to bind something to a Closure and don't want the container to run it. There is a different binding method for binding closures. See the following examples.
-
-```php
-use MiladRahimi\PhpContainer\Container;
-
-$sum = function($a, $b) {
-    return $a + $b;
-};
-
-$container = new Container();
-
-$container->closure('$sum', $sum);
-$result = $container->call(function($sum) {
-    return $sum(7, 6);
-});
-
-echo $result; // 13
 ```
 
 ### Error handling

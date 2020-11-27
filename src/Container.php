@@ -3,9 +3,9 @@
 namespace MiladRahimi\PhpContainer;
 
 use Closure;
-use MiladRahimi\PhpContainer\Bindings\Closure as BClosure;
-use MiladRahimi\PhpContainer\Bindings\Transient;
-use MiladRahimi\PhpContainer\Bindings\Singleton;
+use MiladRahimi\PhpContainer\Types\Closure as BClosure;
+use MiladRahimi\PhpContainer\Types\Transient;
+use MiladRahimi\PhpContainer\Types\Singleton;
 use MiladRahimi\PhpContainer\Exceptions\ContainerException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
@@ -94,7 +94,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Get the right concrete for the given abstract
+     * Get the right concrete for the given abstract id
      *
      * @param $id
      * @return mixed
@@ -107,7 +107,7 @@ class Container implements ContainerInterface
                 return $this->instantiate($id);
             }
 
-            throw new ContainerException($id . ' is not bound.');
+            throw new ContainerException("Cannot find $id in the container.");
         }
 
         $binding = $this->repository[$id];
@@ -134,17 +134,17 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Get ride of the given binding
+     * Get rid of the given binding
      *
      * @param $id
      */
-    public function delete($id)
+    public function delete($id): void
     {
         unset($this->repository[$id]);
     }
 
     /**
-     * Instantiate the concrete class
+     * Instantiate the given class
      *
      * @param string $class
      * @return object
@@ -158,14 +158,10 @@ class Container implements ContainerInterface
             $parameters = [];
             if ($reflection->hasMethod('__construct')) {
                 $method = $reflection->getMethod('__construct');
-                $parameters = $this->arrangeParameters($method->getParameters());
+                $parameters = $this->resolveParameters($method->getParameters());
             }
 
-            if (count($parameters) == 0) {
-                return new $class;
-            } else {
-                return $reflection->newInstanceArgs($parameters);
-            }
+            return count($parameters) == 0 ? new $class : $reflection->newInstanceArgs($parameters);
         } catch (ReflectionException $e) {
             throw new ContainerException('Reflection failed for ' . $class, 0, $e);
         }
@@ -185,21 +181,21 @@ class Container implements ContainerInterface
                 ? new ReflectionMethod($callable[0], $callable[1])
                 : new ReflectionFunction($callable);
 
-            return call_user_func_array($callable, $this->arrangeParameters($reflection->getParameters()));
+            return call_user_func_array($callable, $this->resolveParameters($reflection->getParameters()));
         } catch (ReflectionException $e) {
             throw new ContainerException('Reflection failed.', 0, $e);
         }
     }
 
     /**
-     * Retrieve and arrange method/function parameters (dependencies)
+     * Resolve dependencies of the given function parameters
      *
      * @param ReflectionParameter[] $reflectedParameters
      * @return array
      * @throws ContainerException
      * @throws ReflectionException
      */
-    private function arrangeParameters(array $reflectedParameters = []): array
+    private function resolveParameters(array $reflectedParameters = []): array
     {
         $parameters = [];
 
