@@ -147,7 +147,7 @@ class Container implements ContainerInterface
      * Instantiate the given class
      *
      * @param string $class
-     * @return object
+     * @return mixed
      * @throws ContainerException
      */
     public function instantiate(string $class)
