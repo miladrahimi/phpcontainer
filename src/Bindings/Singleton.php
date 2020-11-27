@@ -1,12 +1,7 @@
 <?php
 
-namespace MiladRahimi\PhpContainer\Types;
+namespace MiladRahimi\PhpContainer\Bindings;
 
-/**
- * Class Singleton
- *
- * @package MiladRahimi\PhpContainer\Types
- */
 class Singleton
 {
     /**
@@ -15,14 +10,14 @@ class Singleton
     private $concrete;
 
     /**
-     * Created instance for singleton resolution
+     * Created instance of the concrete
      *
      * @var mixed
      */
     private $instance;
 
     /**
-     * Prototype constructor.
+     * Singleton constructor.
      *
      * @param mixed $concrete
      */

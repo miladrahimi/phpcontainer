@@ -3,9 +3,9 @@
 namespace MiladRahimi\PhpContainer;
 
 use Closure;
-use MiladRahimi\PhpContainer\Types\Transient;
-use MiladRahimi\PhpContainer\Types\Singleton;
-use MiladRahimi\PhpContainer\Exceptions\NotFoundException;
+use MiladRahimi\PhpContainer\Bindings\Closure as BClosure;
+use MiladRahimi\PhpContainer\Bindings\Transient;
+use MiladRahimi\PhpContainer\Bindings\Singleton;
 use MiladRahimi\PhpContainer\Exceptions\ContainerException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
@@ -14,17 +14,12 @@ use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionParameter;
 
-/**
- * Class Container
- *
- * @package MiladRahimi\PhpContainer
- */
 class Container implements ContainerInterface
 {
     /**
      * Binding repository
      *
-     * @var Transient[]|Singleton[]
+     * @var Transient[]|Singleton[]|BClosure[]
      */
     private $repository = [];
 
@@ -37,7 +32,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Bind in transient mode
+     * Bind a transient dependency
      *
      * @param $id
      * @param $concrete
@@ -48,7 +43,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Bind in singleton mode
+     * Bind a singleton dependency
      *
      * @param $id
      * @param $concrete
@@ -59,18 +54,18 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Bind to a closure
+     * Bind a closure dependency
      *
      * @param $id
      * @param Closure $closure
      */
     public function closure($id, Closure $closure)
     {
-        $this->repository[$id] = new Types\Closure($closure);
+        $this->repository[$id] = new BClosure($closure);
     }
 
     /**
-     * Check if given abstract is bound or not
+     * Check if the given abstract exist in the container or not
      *
      * @param $id
      * @return bool
@@ -81,7 +76,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Check if class is abstract or not
+     * Check if the given class is abstract or not
      *
      * @param string $class
      * @return bool
@@ -92,18 +87,17 @@ class Container implements ContainerInterface
         try {
             $reflection = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection failed for ' . get_class($class));
+            throw new ContainerException('Reflection failed for ' . get_class($class), 0, $e);
         }
 
         return $reflection->isAbstract();
     }
 
     /**
-     * Get the right concrete of the abstract
+     * Get the right concrete for the given abstract
      *
      * @param $id
      * @return mixed
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function get($id)
@@ -113,20 +107,20 @@ class Container implements ContainerInterface
                 return $this->instantiate($id);
             }
 
-            throw new NotFoundException($id . ' is not bound.');
+            throw new ContainerException($id . ' is not bound.');
         }
 
         $binding = $this->repository[$id];
 
-        if ($binding instanceof Singleton && $binding->getInstance()) {
-            return $binding->getInstance();
+        if ($binding instanceof Singleton && $instance = $binding->getInstance()) {
+            return $instance;
         }
 
         $concrete = $binding->getConcrete();
 
         if (is_string($concrete) && class_exists($concrete)) {
             $concrete = $this->instantiate($concrete);
-        } elseif (is_callable($concrete) && !($binding instanceof Types\Closure)) {
+        } elseif (is_callable($concrete) && !($binding instanceof BClosure)) {
             $concrete = $this->call($concrete);
         } elseif (is_object($concrete) && $binding instanceof Transient) {
             return clone $concrete;
@@ -155,9 +149,8 @@ class Container implements ContainerInterface
      * @param string $class
      * @return object
      * @throws ContainerException
-     * @throws NotFoundException
      */
-    protected function instantiate(string $class)
+    public function instantiate(string $class)
     {
         try {
             $reflection = new ReflectionClass($class);
@@ -184,7 +177,6 @@ class Container implements ContainerInterface
      * @param callable|array $callable
      * @return mixed
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function call($callable)
     {
@@ -205,7 +197,6 @@ class Container implements ContainerInterface
      * @param ReflectionParameter[] $reflectedParameters
      * @return array
      * @throws ContainerException
-     * @throws NotFoundException
      * @throws ReflectionException
      */
     private function arrangeParameters(array $reflectedParameters = []): array

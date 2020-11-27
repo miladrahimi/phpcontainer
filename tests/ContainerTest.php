@@ -3,7 +3,6 @@
 namespace MiladRahimi\PhpContainer\Tests;
 
 use MiladRahimi\PhpContainer\Container;
-use MiladRahimi\PhpContainer\Exceptions\NotFoundException;
 use MiladRahimi\PhpContainer\Exceptions\ContainerException;
 use MiladRahimi\PhpContainer\Tests\Classes\A;
 use MiladRahimi\PhpContainer\Tests\Classes\B;
@@ -52,18 +51,16 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_getting_unbound_abstraction_it_should_fail()
     {
-        $this->expectException(NotFoundException::class);
+        $this->expectException(ContainerException::class);
 
         $this->container->get(D::class);
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_getting_implicitly_with_no_constructor_parameter_it_should_resolve()
@@ -72,7 +69,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_getting_implicitly_with_constructor_injections_it_should_resolve()
@@ -81,7 +77,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_getting_implicitly_with_constructor_parameter_with_default_value_it_should_resolve()
@@ -95,7 +90,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_getting_implicitly_with_constructor_parameter_without_default_value_it_should_fail()
     {
@@ -104,7 +98,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_getting_explicitly_with_constructor_auto_injection_it_should_resolve()
@@ -117,7 +110,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_singleton_explicit_binding()
@@ -135,7 +127,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_prototype_implicit_binding()
@@ -151,7 +142,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_prototype_explicit_binding()
@@ -169,7 +159,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_prototype_callable_binding_with_no_parameter()
@@ -187,7 +176,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      * @noinspection PhpUnusedParameterInspection
      */
     public function test_getting_with_invalid_callable_bound_it_should_fail()
@@ -201,7 +189,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_singleton_callable_binding_with_no_parameter()
@@ -218,7 +205,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_callable_binding_with_string_parameter()
@@ -235,7 +221,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_callable_binding_with_injection()
@@ -252,7 +237,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_object_singleton_binding()
@@ -272,7 +256,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_object_prototype_binding()
@@ -292,7 +275,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws NotFoundException
      * @throws ContainerException
      */
     public function test_scalar_binding()
@@ -306,7 +288,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_call_with_free_function_it_should_only_call_it()
     {
@@ -319,7 +300,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_call_with_some_dependencies_it_should_resolve_em()
     {
@@ -336,7 +316,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_call_with_singleton_named_binding_it_should_resolve()
     {
@@ -353,7 +332,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_call_with_prototype_named_binding_it_should_resolve()
     {
@@ -370,7 +348,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_calling_method_it_should_resolve()
     {
@@ -384,7 +361,6 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_binding_to_a_closure_with_name()
     {
@@ -403,14 +379,38 @@ class ContainerTest extends TestCase
 
     /**
      * @throws ContainerException
-     * @throws NotFoundException
      */
     public function test_deleting_a_binding()
     {
         $this->container->transient('temp', 'Bye!');
         $this->container->delete('temp');
 
-        $this->expectException(NotFoundException::class);
+        $this->expectException(ContainerException::class);
         $this->container->get('temp');
+    }
+
+    /**
+     * @throws ContainerException
+     */
+    public function test_instantiating()
+    {
+        /** @var E $e */
+        $e = $this->container->instantiate(E::class);
+
+        $this->assertInstanceOf(A::class, $e->a);
+        $this->assertEquals('something', $e->value);
+    }
+
+    /**
+     * @throws ContainerException
+     */
+    public function test_calling_a_method()
+    {
+        $g = new G();
+
+        $this->container->singleton('$number', 13);
+        $this->container->call([$g, 'setNumber']);
+
+        $this->assertEquals(13, $g->number);
     }
 }

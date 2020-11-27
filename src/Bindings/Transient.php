@@ -1,12 +1,7 @@
 <?php
 
-namespace MiladRahimi\PhpContainer\Types;
+namespace MiladRahimi\PhpContainer\Bindings;
 
-/**
- * Class Transient
- *
- * @package MiladRahimi\PhpContainer\Types
- */
 class Transient
 {
     /**
@@ -15,7 +10,7 @@ class Transient
     private $concrete;
 
     /**
-     * Prototype constructor.
+     * Transient constructor.
      *
      * @param mixed $concrete
      */

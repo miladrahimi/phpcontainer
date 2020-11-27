@@ -28,7 +28,7 @@ composer require miladrahimi/phpcontainer:5.*
 ### Explicit Binding
 
 Explicit binding means explicitly bind an abstraction to a concrete (implementation).
-You can bind via `singleton()` and `transient()` methods.
+You can bind via `singleton()`, `transient()` and `closure()` methods.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -229,11 +229,8 @@ echo $result; // 13
 
 ### Error handling
 
-The container might raise the following exceptions:
-
-`NotFoundException` raises when you try to make an abstraction while you haven't bound it to any concrete yet.
-
-`ContainerException` raises when `ReflectionException` raises, or the container cannot inject parameter values to the concrete constructor or closures.
+The container might raise the `ContainerException` exception.
+It raises when `ReflectionException` raises, no concrete exist for given abstraction, or the container cannot inject parameter values to the concrete constructor or closures.
 
 ## License
 
