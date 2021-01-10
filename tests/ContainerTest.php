@@ -50,9 +50,6 @@ class ContainerTest extends TestCase
         $this->assertFalse($this->container->has(Blank::class));
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_unbound_abstraction_it_should_fail()
     {
         $this->expectException(ContainerException::class);
@@ -60,25 +57,16 @@ class ContainerTest extends TestCase
         $this->container->get(D::class);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_implicitly_with_no_constructor_parameter_it_should_resolve()
     {
         $this->assertInstanceOf(A::class, $this->container->get(A::class));
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_implicitly_with_constructor_injections_it_should_resolve()
     {
         $this->assertInstanceOf(C::class, $this->container->get(C::class));
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_implicitly_with_constructor_parameter_with_default_value_it_should_resolve()
     {
         /** @var E $e */
@@ -88,18 +76,12 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $e->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_implicitly_with_constructor_parameter_without_default_value_it_should_fail()
     {
         $this->expectException(ContainerException::class);
         $this->container->get(F::class);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_getting_explicitly_with_constructor_auto_injection_it_should_resolve()
     {
         $this->container->transient(A::class, A::class);
@@ -109,9 +91,6 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(C::class, $this->container->get(C::class));
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_singleton_explicit_binding()
     {
         $this->container->singleton(Blank::class, E::class);
@@ -126,9 +105,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something-else', $e2->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_prototype_implicit_binding()
     {
         /** @var E $e1 */
@@ -141,9 +117,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $e2->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_prototype_explicit_binding()
     {
         $this->container->transient(Blank::class, E::class);
@@ -158,9 +131,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $e2->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_prototype_callable_binding_with_no_parameter()
     {
         $this->container->transient('time', function () {
@@ -175,7 +145,6 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * @throws ContainerException
      * @noinspection PhpUnusedParameterInspection
      */
     public function test_getting_with_invalid_callable_bound_it_should_fail()
@@ -188,9 +157,6 @@ class ContainerTest extends TestCase
         $this->container->get('time');
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_singleton_callable_binding_with_no_parameter()
     {
         $this->container->singleton('time', function () {
@@ -204,9 +170,6 @@ class ContainerTest extends TestCase
         $this->assertSame($t1, $t2);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_callable_binding_with_string_parameter()
     {
         $f = function ($value = 'something') {
@@ -220,9 +183,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $x);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_callable_binding_with_injection()
     {
         $this->container->singleton(Blank::class, E::class);
@@ -236,9 +196,6 @@ class ContainerTest extends TestCase
         $this->assertTrue($x);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_object_singleton_binding()
     {
         $a = new A();
@@ -255,9 +212,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something-else', $a2->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_object_prototype_binding()
     {
         $a = new A();
@@ -274,9 +228,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $a2->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_scalar_binding()
     {
         $this->container->transient('ABC', 'XYZ');
@@ -286,9 +237,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('XYZ', $value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_call_with_free_function_it_should_only_call_it()
     {
         $response = $this->container->call(function () {
@@ -298,9 +246,6 @@ class ContainerTest extends TestCase
         $this->assertEquals(666, $response);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_call_with_some_dependencies_it_should_resolve_em()
     {
         $value = mt_rand(0, 1000000);
@@ -314,9 +259,6 @@ class ContainerTest extends TestCase
         $this->assertEquals($value, $response);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_call_with_singleton_named_binding_it_should_resolve()
     {
         $number = mt_rand(0, 1000000);
@@ -330,9 +272,6 @@ class ContainerTest extends TestCase
         $this->assertEquals($number, $response);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_call_with_prototype_named_binding_it_should_resolve()
     {
         $number = mt_rand(0, 1000000);
@@ -346,9 +285,6 @@ class ContainerTest extends TestCase
         $this->assertEquals($number, $response);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_calling_method_it_should_resolve()
     {
         $object = new G();
@@ -359,9 +295,6 @@ class ContainerTest extends TestCase
         $this->assertEquals(666, $object->number);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_binding_to_a_closure_with_name()
     {
         $sum = function ($a, $b) {
@@ -377,9 +310,6 @@ class ContainerTest extends TestCase
         $this->assertEquals(13, $r);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_deleting_a_binding()
     {
         $this->container->transient('temp', 'Bye!');
@@ -389,9 +319,6 @@ class ContainerTest extends TestCase
         $this->container->get('temp');
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_instantiating()
     {
         /** @var E $e */
@@ -401,9 +328,6 @@ class ContainerTest extends TestCase
         $this->assertEquals('something', $e->value);
     }
 
-    /**
-     * @throws ContainerException
-     */
     public function test_calling_a_method()
     {
         $g = new G();
