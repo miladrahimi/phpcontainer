@@ -27,7 +27,7 @@
     "source": "https://github.com/miladrahimi/phpcontainer/issues"
   },
   "require": {
-    "php": "^7.1",
+    "php": "^7.1|^8.0",
     "psr/container": "^1.0"
   },
   "autoload": {
