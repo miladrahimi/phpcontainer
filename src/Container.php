@@ -3,23 +3,22 @@
 namespace MiladRahimi\PhpContainer;
 
 use Closure;
-use MiladRahimi\PhpContainer\Types\Closure as BClosure;
+use MiladRahimi\PhpContainer\Exceptions\ContainerException;
+use MiladRahimi\PhpContainer\Types\Closure as TClosure;
 use MiladRahimi\PhpContainer\Types\Transient;
 use MiladRahimi\PhpContainer\Types\Singleton;
-use MiladRahimi\PhpContainer\Exceptions\ContainerException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
-use ReflectionParameter;
 
 class Container implements ContainerInterface
 {
     /**
      * Binding repository
      *
-     * @var Transient[]|Singleton[]|BClosure[]
+     * @var Transient[]|Singleton[]
      */
     private $repository = [];
 
@@ -33,44 +32,33 @@ class Container implements ContainerInterface
 
     /**
      * Bind a transient dependency
-     *
-     * @param $id
-     * @param $concrete
      */
-    public function transient($id, $concrete)
+    public function transient(string $id, $concrete)
     {
         $this->repository[$id] = new Transient($concrete);
     }
 
     /**
      * Bind a singleton dependency
-     *
-     * @param $id
-     * @param $concrete
      */
-    public function singleton($id, $concrete)
+    public function singleton(string $id, $concrete)
     {
         $this->repository[$id] = new Singleton($concrete);
     }
 
     /**
      * Bind a closure dependency
-     *
-     * @param $id
-     * @param Closure $closure
      */
     public function closure($id, Closure $closure)
     {
-        $this->repository[$id] = new BClosure($closure);
+        $this->repository[$id] = new TClosure($closure);
     }
 
     /**
-     * Check if the given abstract exist in the container or not
-     *
-     * @param $id
-     * @return bool
+     * Returns true if the container can return an entry for the given identifier.
+     * Returns false otherwise.
      */
-    public function has($id): bool
+    public function has(string $id): bool
     {
         return isset($this->repository[$id]);
     }
@@ -94,16 +82,14 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Get the right concrete for the given abstract id
+     * Finds an entry of the container by its identifier and returns it.
      *
-     * @param $id
-     * @return mixed
      * @throws ContainerException
      */
-    public function get($id)
+    public function get(string $id)
     {
-        if (isset($this->repository[$id]) == false) {
-            if (class_exists($id) && $this->isAbstract($id) == false) {
+        if (!isset($this->repository[$id])) {
+            if (class_exists($id) && !$this->isAbstract($id)) {
                 return $this->instantiate($id);
             }
 
@@ -120,7 +106,7 @@ class Container implements ContainerInterface
 
         if (is_string($concrete) && class_exists($concrete)) {
             $concrete = $this->instantiate($concrete);
-        } elseif (is_callable($concrete) && !($binding instanceof BClosure)) {
+        } elseif (is_callable($concrete) && !($binding instanceof TClosure)) {
             $concrete = $this->call($concrete);
         } elseif (is_object($concrete) && $binding instanceof Transient) {
             return clone $concrete;
@@ -135,8 +121,6 @@ class Container implements ContainerInterface
 
     /**
      * Get rid of the given binding
-     *
-     * @param $id
      */
     public function delete($id): void
     {
@@ -146,8 +130,6 @@ class Container implements ContainerInterface
     /**
      * Instantiate the given class
      *
-     * @param string $class
-     * @return mixed
      * @throws ContainerException
      */
     public function instantiate(string $class)
@@ -170,8 +152,6 @@ class Container implements ContainerInterface
     /**
      * Call the concrete callable
      *
-     * @param callable|array $callable
-     * @return mixed
      * @throws ContainerException
      */
     public function call($callable)
@@ -190,16 +170,13 @@ class Container implements ContainerInterface
     /**
      * Resolve dependencies of the given function parameters
      *
-     * @param ReflectionParameter[] $reflectedParameters
-     * @return array
      * @throws ContainerException
-     * @throws ReflectionException
      */
     private function resolveParameters(array $reflectedParameters = []): array
     {
         $parameters = [];
 
-        foreach ($reflectedParameters as $i => $parameter) {
+        foreach ($reflectedParameters as $parameter) {
             if (isset($this->repository['$' . $parameter->getName()])) {
                 $parameters[] = $this->get('$' . $parameter->getName());
             } elseif (
