@@ -75,7 +75,7 @@ class Container implements ContainerInterface
         try {
             $reflection = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection failed for ' . get_class($class), 0, $e);
+            throw new ContainerException('Reflection failed for ' . $class, 0, $e);
         }
 
         return $reflection->isAbstract();
@@ -117,6 +117,20 @@ class Container implements ContainerInterface
         }
 
         return $concrete;
+    }
+
+    /**
+     * Catch an entry of the container by its identifier without resolving nested dependencies.
+     *
+     * @throws ContainerException
+     */
+    public function catch(string $id)
+    {
+        if (!isset($this->repository[$id])) {
+            throw new ContainerException("Cannot find $id in the container.");
+        }
+
+        return $this->repository[$id]->getConcrete();
     }
 
     /**
@@ -178,7 +192,7 @@ class Container implements ContainerInterface
 
         foreach ($reflectedParameters as $parameter) {
             if (isset($this->repository['$' . $parameter->getName()])) {
-                $parameters[] = $this->get('$' . $parameter->getName());
+                $parameters[] = $this->catch('$' . $parameter->getName());
             } elseif (
                 $parameter->getType() &&
                 (

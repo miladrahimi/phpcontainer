@@ -272,6 +272,19 @@ class ContainerTest extends TestCase
         $this->assertEquals($number, $response);
     }
 
+    public function test_call_with_value_that_match_a_php_function_name()
+    {
+        $value = 'count';
+
+        $this->container->transient('$key', $value);
+
+        $response = $this->container->call(function ($key) {
+            return $key;
+        });
+
+        $this->assertEquals($value, $response);
+    }
+
     public function test_call_with_prototype_named_binding_it_should_resolve()
     {
         $number = mt_rand(0, 1000000);
