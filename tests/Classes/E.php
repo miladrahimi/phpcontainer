@@ -4,9 +4,9 @@ namespace MiladRahimi\PhpContainer\Tests\Classes;
 
 class E implements Blank
 {
-    public $a;
+    public A $a;
 
-    public $value;
+    public string $value;
 
     public function __construct(A $a, string $value = 'something')
     {

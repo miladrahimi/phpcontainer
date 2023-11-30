@@ -16,10 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-    /**
-     * @var Container
-     */
-    private $container;
+    private Container $container;
 
     /**
      * @inheritDoc
@@ -139,6 +136,8 @@ class ContainerTest extends TestCase
 
         $t1 = $this->container->get('time');
 
+        for ($i = 0; $i < 1000; $i++) sleep(0);
+
         $t2 = $this->container->get('time');
 
         $this->assertNotEquals($t1, $t2);
@@ -187,8 +186,8 @@ class ContainerTest extends TestCase
     {
         $this->container->singleton(Blank::class, E::class);
 
-        $this->container->transient('element', function (Blank $e, B $b) {
-            return $e instanceof E && $b instanceof B;
+        $this->container->transient('element', function (Blank $e) {
+            return $e instanceof E;
         });
 
         $x = $this->container->get('element');

@@ -4,9 +4,9 @@ namespace MiladRahimi\PhpContainer\Tests\Classes;
 
 class F
 {
-    public $a;
+    public A $a;
 
-    public $value;
+    public string $value;
 
     public function __construct(A $a, string $value)
     {
