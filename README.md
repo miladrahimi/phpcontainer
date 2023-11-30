@@ -7,29 +7,25 @@
 
 # PhpContainer
 
-PSR-11 compliant dependency injection (Inversion of Control) container for PHP projects.
+A dependency injection (Inversion of Control) container written in PHP programming language, compliant with PSR-11 standards.
 
 Features:
-* Singleton, transient, and closure binding
-* Explicit and implicit binding
-* Typed and named binding
-* Constructor and closure auto-injection for nested resolving
-* Smart resolving using explicit and implicit binding and default values
-* Binding using closure
-* Binding to objects
-* Direct class instantiating and dependency injection
-* Direct function, closure, and method calling and dependency injection
+* Singleton, transient, and closure bindings
+* Explicit and implicit bindings
+* Typed and named bindings
+* Automatic injection
 
 ## Overview
-[Dependency Inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle) is one of the most important Object-oriented design principles.
 
-[Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection), [Inversion of control](https://en.wikipedia.org/wiki/Inversion_of_control) and [IoC Container](http://www.codeproject.com/Articles/542752/Dependency-Inversion-Principle-IoC-Container-Depen) are the outcomes for this principle.
+[Dependency Inversion](https://en.wikipedia.org/wiki/Dependency_inversion_principle) is a fundamental concept in Object-oriented design.
 
-PhpContainer provides a [PSR-11 compliant](https://www.php-fig.org/psr/psr-11) dependency injection container (aka IoC Container) for your PHP projects.
+It leads to important ideas like [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection), [Inversion of Control](https://en.wikipedia.org/wiki/Inversion_of_control), and the creation of an [IoC Container](http://www.codeproject.com/Articles/542752/Dependency-Inversion-Principle-IoC-Container-Depen).
+
+For PHP projects, there's the PhpContainer, a handy tool that provides a dependency injection container (IoC Container) conforming to [PSR-11 standards](https://www.php-fig.org/psr/psr-11).
 
 ## Installation
 
-You can add PhpContainer to your project via Composer with the following command:
+To integrate PhpContainer into your project, use the following Composer command:
 
 ```bash
 composer require miladrahimi/phpcontainer:5.*
@@ -39,8 +35,8 @@ composer require miladrahimi/phpcontainer:5.*
 
 ### Explicit Binding
 
-Explicit binding means explicitly bind an abstraction to a concrete (implementation).
-You can use the `singleton()`, `transient()` and `closure()` methods to bind explicitly.
+Explicit binding involves directly linking an abstraction to a concrete implementation.
+This binding can be achieved by using the `singleton()`, `transient()`, and `closure()` methods.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -49,22 +45,18 @@ $container = new Container();
 
 $container->singleton(DatabaseInterface::class, MySQL::class);
 $container->transient(MailerInterface::class, MailTrap::class);
-$container->closure('sum', function($a, $b) {
-    return $a + $b;
-});
+$container->closure('sum', function($a, $b) { return $a + $b; });
 
-$database = $container->get(DatabaseInterface::class);
-$mailer = $container->get(MailerInterface::class);
-$sum = $container->get('sum');
+$database = $container->get(DatabaseInterface::class); // An instance of MySQL
+$mailer = $container->get(MailerInterface::class); // An instance of MailTrap
+$sum = $container->get('sum'); // A closure: $sum(6, 7) => 13
 ```
 
-#### Binding methods
+#### Binding Methods
 
-* **Singleton binding**: When you bind using the `singleton` method, the container creates the concrete only once and return it whenever you need it.
-
-* **Transient binding**: When you bind using the `transient` method, the container clones or creates a brand-new concrete each time you need it.
-
-* **Closure binding**: You can only bind closures using the `closure` method. Then the container returns the closure when you need it. It prevents the container call the closure (it is the default behavior).
+* Singleton binding: The container creates the concrete only once and returns it whenever needed.
+* Transient binding: The container clones or creates brand-new concrete each time you need it.
+* Closure binding: Only for closures. It prevents the container from calling the closure (the default behavior).
 
 The following example demonstrates the differences between singleton and transient binding.
 
@@ -87,14 +79,13 @@ $b1->name = 'Something';
 
 $b2 = $container->get(InterfaceB::class);
 echo $b2->name; // 'Something'
-
 ```
 
 ### Implicit Binding
 
-The container tries to instantiate the needed class when there is no concrete bound.
-In the example below, the container instantiates the `MySQL` class and returns the instance.
-The container raises an error when it cannot instantiate (for example, it's an interface or abstract class).
+When the container needs a class without a specific binding, it tries to create an instance.
+In the example below, it instantiates the `MySQL` class in the provided code.
+But if it encounters an abstract class or an interface that can't be instantiated directly, an error occurs.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -106,10 +97,10 @@ $container = new Container();
 $database = $container->get(MySQL::class);
 ```
 
-### Binding to objects
+### Binding to Objects
 
-You can bind abstractions to objects.
-In this case, you can use singleton binding to get the original object when you need it or transient binding to get a clone of the object each time you need it.
+You can connect abstracts to specific objects.
+Using singleton binding gives you the original object when required, while transient binding offers a fresh copy of the object every time you ask for it.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -118,40 +109,44 @@ $user = new User();
 $user->name = 'Milad';
 
 $container = new Container();
+
 $container->singleton('user', $user);
+// OR
+$container->transient('user', $user);
 ```
 
 ### Constructor Auto-injection
 
-Concrete classes can have constructor parameters that have default values or resolvable by the container.
+Concrete classes might contain constructor parameters that either possess default values or can be resolved by the container.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
 
-class Notifier implements NotifierInterface {
-    public function __constructor(MailInterface $mail, Sms $sms, $sender = 'Awesome') {
-        // ...
+class Notifier implements NotifierInterface
+{
+    public MailInterface $mail;
+    public Vonage $vonage;
+    public string $sender;
+
+    public function __constructor(MailInterface $mail, Vonage $vonage, $sender = 'PhpContainer')
+    {
+        $this->mail = $mail;
+        $this->vonage = $vonage;
+        $this->sender = $sender;
     }
 }
 
 $container = new Container();
-
 $container->transient(MailInterface::class, MailTrap::class);
 $container->transient(NotifierInterface::class, Notifier::class);
 
 $notifier = $container->get(NotifierInterface::class);
+print_r($notifier->mail);   // $mail would be an instnace of MailTrap (explicit binding)
+print_r($notifier->vonage); // $vonage would be an instnace of Vonage (implicit binding)
+print_r($notifier->sender); // $sender would be "PhpContainer" (default value)
 ```
 
-Well, let's check what the container does!
-The container tries to create an instance of Notifier.
-The Notifier constructor has some arguments. It's ok!
-The first argument is MailInterface, and it's already bound to MailTrap. The container injects an instance of MailTrap.
-The second argument is the `Sms` class. It's not bound to any implementation, but it's insatiable, so the container instantiates and passes an instance of it.
-The last argument is a primitive variable and has a default value, so the container passes the default value.
-
-Constructor auto-injection is also available for implicit bindings.
-
-### Binding using Closure
+### Binding Using Closure
 
 The following example illustrates how to bind using Closure.
 
@@ -176,10 +171,13 @@ $container->singleton(Database::class, function (Config $config) {
 });
 ```
 
-The container calls the Closure once in singleton binding and calls it each time needed in transient binding.
-If you want to bind an abstraction to a Closure and don't want the container to call the Closure, you can use the `closure()` binding method instead.
+In singleton binding, the container executes the Closure once and retrieves the result whenever needed.
+Conversely, in transient binding, the container invokes the Closure each time it's required.
+If you intend to bind an abstraction to a Closure without immediate invocation by the container, you can use the `closure()` method instead.
 
-### Direct Closure, function, and method call
+### Resolving Using Closure
+
+You have the option to use the `call` method, allowing the container to execute the provided function or closure and resolve its arguments.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -207,21 +205,10 @@ class UserManager {
 $response = $container->call([UserManager::class, 'sendMail']);
 ```
 
-### Direct class instantiating
-
-You can instantiate classes using the container. In this case, the container injects constructor dependencies and returns an instance.
-
-```php
-use MiladRahimi\PhpContainer\Container;
-
-$container = new Container();
-$controller = $container->instantiate(Controller::class);
-```
-
 ### Type-based and name-based binding
 
-PhpContainer supports typed-based and name-based binding.
-The following example demonstrates these types of binding.
+PhpContainer supports typed-based and name-based bindings.
+The following example demonstrates these types of bindings.
 
 ```php
 use MiladRahimi\PhpContainer\Container;
@@ -231,7 +218,7 @@ $container = new Container();
 // Type-based binding
 $container->singleton(Database::class, MySQL::class);
 $container->call(function(Database $database) {
-    // ...
+    $database->ping();
 });
 
 // Name-based binding
@@ -243,8 +230,9 @@ $container->call(function($number) {
 
 ### Error handling
 
-The container might raise the `ContainerException` exception.
-It raises when `ReflectionException` raises, no concrete exist for given abstraction, or the container cannot inject parameter values to the concrete constructor or closures.
+The `ContainerException` might be raised by the container for several reasons.
+It can arise when a `ReflectionException` occurs, indicating a missing concrete implementation for a provided abstraction.
+Additionally, this exception occures when the container cannot inject parameter values into concrete constructors or closures.
 
 ## License
 
