@@ -10,8 +10,6 @@ class Transient
     private $concrete;
 
     /**
-     * Transient constructor.
-     *
      * @param mixed $concrete
      */
     public function __construct($concrete)

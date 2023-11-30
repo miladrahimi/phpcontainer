@@ -20,7 +20,7 @@ class Container implements ContainerInterface
      *
      * @var Transient[]|Singleton[]
      */
-    private $repository = [];
+    private array $repository = [];
 
     /**
      * Empty the container
@@ -66,8 +66,6 @@ class Container implements ContainerInterface
     /**
      * Check if the given class is abstract or not
      *
-     * @param string $class
-     * @return bool
      * @throws ContainerException
      */
     protected function isAbstract(string $class): bool
@@ -75,7 +73,7 @@ class Container implements ContainerInterface
         try {
             $reflection = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new ContainerException('Reflection failed for ' . $class, 0, $e);
+            throw new ContainerException("Reflection error for $class", 0, $e);
         }
 
         return $reflection->isAbstract();

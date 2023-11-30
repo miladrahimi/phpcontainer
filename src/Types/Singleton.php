@@ -17,8 +17,6 @@ class Singleton
     private $instance;
 
     /**
-     * Singleton constructor.
-     *
      * @param mixed $concrete
      */
     public function __construct($concrete)
