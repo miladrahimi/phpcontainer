@@ -1,7 +1,8 @@
 [![Latest Stable Version](https://poser.pugx.org/miladrahimi/phpcontainer/v)](//packagist.org/packages/miladrahimi/phpcontainer)
 [![Total Downloads](https://poser.pugx.org/miladrahimi/phpcontainer/downloads)](//packagist.org/packages/miladrahimi/phpcontainer)
-[![Build Status](https://travis-ci.org/miladrahimi/phpcontainer.svg?branch=master)](https://travis-ci.org/miladrahimi/phpcontainer)
-[![Coverage Status](https://coveralls.io/repos/github/miladrahimi/phpcontainer/badge.svg?branch=master)](https://coveralls.io/github/miladrahimi/phpcontainer?branch=master)
+[![Build](https://github.com/miladrahimi/phpcontainer/actions/workflows/ci.yml/badge.svg)](https://github.com/miladrahimi/phpcontainer/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/miladrahimi/phpcontainer/graph/badge.svg?token=LFW0H0GSMQ)](https://codecov.io/gh/miladrahimi/phpcontainer)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/miladrahimi/phpcontainer/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/miladrahimi/phpcontainer/?branch=master)
 [![License](https://poser.pugx.org/miladrahimi/phpcontainer/license)](//packagist.org/packages/miladrahimi/phpcontainer)
 
 # PhpContainer
@@ -9,12 +10,12 @@
 PSR-11 compliant dependency injection (Inversion of Control) container for PHP projects.
 
 Features:
-* Singleton, transient, and Closure binding
+* Singleton, transient, and closure binding
 * Explicit and implicit binding
 * Typed and named binding
-* Constructor and Closure auto-injection for nested resolving
+* Constructor and closure auto-injection for nested resolving
 * Smart resolving using explicit and implicit binding and default values
-* Binding using Closure
+* Binding using closure
 * Binding to objects
 * Direct class instantiating and dependency injection
 * Direct function, closure, and method calling and dependency injection
